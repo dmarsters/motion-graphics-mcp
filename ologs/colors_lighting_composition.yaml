@@ -1,0 +1,392 @@
+# Color Palettes and Lighting Taxonomy
+# Layer 1 - Pure taxonomy (zero LLM cost)
+
+color_palettes:
+  cyberpunk:
+    name: "Cyberpunk"
+    colors:
+      - "#FF00FF"  # hot magenta
+      - "#00FFFF"  # cyan
+      - "#FF0080"  # pink
+      - "#8000FF"  # purple
+      - "#00FF80"  # teal
+    mood: "neon, electric, nocturnal, tech noir"
+    use_cases: ["sci-fi", "night_city", "hacker_aesthetic"]
+    
+  pastel:
+    name: "Pastel"
+    colors:
+      - "#FFB3BA"  # pink
+      - "#FFDFBA"  # peach
+      - "#FFFFBA"  # yellow
+      - "#BAFFC9"  # mint
+      - "#BAE1FF"  # blue
+    mood: "soft, gentle, kawaii, dreamy"
+    use_cases: ["cute", "children", "calm", "spring"]
+    
+  monochrome:
+    name: "Monochrome"
+    colors:
+      - "#FFFFFF"  # white
+      - "#CCCCCC"  # light gray
+      - "#808080"  # mid gray
+      - "#404040"  # dark gray
+      - "#000000"  # black
+    mood: "minimal, elegant, timeless, sophisticated"
+    use_cases: ["professional", "architectural", "minimalist"]
+    
+  fire:
+    name: "Fire"
+    colors:
+      - "#FFFF00"  # yellow
+      - "#FFA500"  # orange
+      - "#FF4500"  # red-orange
+      - "#FF0000"  # red
+      - "#8B0000"  # dark red
+    mood: "hot, energetic, dangerous, passionate"
+    use_cases: ["energy", "heat", "intensity", "warning"]
+    
+  ocean:
+    name: "Ocean"
+    colors:
+      - "#E0F7FF"  # pale cyan
+      - "#87CEEB"  # sky blue
+      - "#4682B4"  # steel blue
+      - "#1E90FF"  # dodger blue
+      - "#000080"  # navy
+    mood: "deep, calm, vast, mysterious"
+    use_cases: ["underwater", "serene", "depth", "aquatic"]
+    
+  earth:
+    name: "Earth"
+    colors:
+      - "#8B4513"  # saddle brown
+      - "#A0522D"  # sienna
+      - "#D2691E"  # chocolate
+      - "#CD853F"  # peru
+      - "#DEB887"  # burlywood
+    mood: "natural, organic, grounded, warm"
+    use_cases: ["nature", "wood", "desert", "autumn"]
+    
+  neon_rainbow:
+    name: "Neon Rainbow"
+    colors:
+      - "#FF0000"  # red
+      - "#FF7F00"  # orange
+      - "#FFFF00"  # yellow
+      - "#00FF00"  # green
+      - "#0000FF"  # blue
+      - "#8B00FF"  # violet
+    mood: "vibrant, full spectrum, energetic, pride"
+    use_cases: ["rainbow", "pride", "celebration", "full_color"]
+    
+  gold_silver:
+    name: "Gold & Silver"
+    colors:
+      - "#FFD700"  # gold
+      - "#FFA500"  # golden orange
+      - "#C0C0C0"  # silver
+      - "#E8E8E8"  # light silver
+      - "#808080"  # gray silver
+    mood: "luxurious, metallic, precious, valuable"
+    use_cases: ["luxury", "awards", "jewelry", "premium"]
+    
+  vaporwave:
+    name: "Vaporwave"
+    colors:
+      - "#FF71CE"  # hot pink
+      - "#01CDFE"  # cyan
+      - "#05FFA1"  # mint
+      - "#B967FF"  # purple
+      - "#FFFB96"  # pale yellow
+    mood: "retro, nostalgic, 80s/90s, surreal"
+    use_cases: ["retro_futurism", "aesthetic", "nostalgia"]
+    
+  sunset:
+    name: "Sunset"
+    colors:
+      - "#FF6B9D"  # pink
+      - "#FFA06B"  # coral
+      - "#FFD56B"  # golden
+      - "#FFA500"  # orange
+      - "#FF4500"  # red-orange
+    mood: "warm, romantic, peaceful, transient"
+    use_cases: ["romantic", "warm_glow", "evening", "transition"]
+
+lighting_moods:
+  dramatic_side:
+    name: "Dramatic Side Light"
+    description: "Strong directional light from one side creating contrast"
+    lights:
+      - type: "DirectionalLight"
+        position: [-5, 3, 0]
+        intensity: 2.0
+        color: "#FFFFFF"
+        cast_shadow: true
+      - type: "AmbientLight"
+        intensity: 0.2
+        color: "#FFFFFF"
+    mood: "dramatic, theatrical, high contrast"
+    shadow_quality: "hard, defined"
+    
+  soft_ambient:
+    name: "Soft Ambient"
+    description: "Even, diffuse lighting from all directions"
+    lights:
+      - type: "AmbientLight"
+        intensity: 0.8
+        color: "#FFFFFF"
+      - type: "HemisphereLight"
+        sky_color: "#FFFFBB"
+        ground_color: "#080820"
+        intensity: 0.5
+    mood: "calm, even, soft"
+    shadow_quality: "none"
+    
+  three_point:
+    name: "Three Point"
+    description: "Classic key/fill/rim setup"
+    lights:
+      - type: "DirectionalLight"  # key
+        position: [5, 5, 5]
+        intensity: 1.5
+        color: "#FFFFFF"
+        cast_shadow: true
+      - type: "DirectionalLight"  # fill
+        position: [-3, 3, 3]
+        intensity: 0.5
+        color: "#FFFFFF"
+      - type: "DirectionalLight"  # rim
+        position: [0, 3, -5]
+        intensity: 0.8
+        color: "#FFFFFF"
+    mood: "professional, balanced, sculptural"
+    shadow_quality: "medium, natural"
+    
+  neon_glow:
+    name: "Neon Glow"
+    description: "Multiple colored point lights creating electric ambiance"
+    lights:
+      - type: "PointLight"
+        position: [3, 2, 0]
+        intensity: 2.0
+        color: "#FF00FF"
+        distance: 10
+        decay: 2
+      - type: "PointLight"
+        position: [-3, 2, 0]
+        intensity: 2.0
+        color: "#00FFFF"
+        distance: 10
+        decay: 2
+      - type: "AmbientLight"
+        intensity: 0.1
+        color: "#1A1A2E"
+    mood: "cyberpunk, electric, nocturnal"
+    shadow_quality: "none"
+    
+  sunrise:
+    name: "Sunrise"
+    description: "Warm low-angle light suggesting dawn"
+    lights:
+      - type: "DirectionalLight"
+        position: [10, 1, 5]
+        intensity: 1.8
+        color: "#FFB366"
+        cast_shadow: true
+      - type: "HemisphereLight"
+        sky_color: "#FF9966"
+        ground_color: "#4A4A6A"
+        intensity: 0.4
+    mood: "warm, hopeful, fresh, new beginning"
+    shadow_quality: "long, dramatic"
+    
+  moonlight:
+    name: "Moonlight"
+    description: "Cool, dim light from above"
+    lights:
+      - type: "DirectionalLight"
+        position: [0, 10, 2]
+        intensity: 0.6
+        color: "#B0C4DE"
+        cast_shadow: true
+      - type: "AmbientLight"
+        intensity: 0.1
+        color: "#1A1A2E"
+    mood: "nocturnal, mysterious, serene"
+    shadow_quality: "soft, blue-tinted"
+    
+  studio_clean:
+    name: "Studio Clean"
+    description: "Bright, even lighting with minimal shadows"
+    lights:
+      - type: "DirectionalLight"
+        position: [5, 5, 5]
+        intensity: 1.0
+        color: "#FFFFFF"
+      - type: "DirectionalLight"
+        position: [-5, 5, 5]
+        intensity: 1.0
+        color: "#FFFFFF"
+      - type: "AmbientLight"
+        intensity: 0.6
+        color: "#FFFFFF"
+    mood: "clean, professional, product photography"
+    shadow_quality: "minimal, soft"
+    
+  colored_contrast:
+    name: "Colored Contrast"
+    description: "Complementary colored lights creating color contrast"
+    lights:
+      - type: "DirectionalLight"
+        position: [5, 3, 0]
+        intensity: 1.5
+        color: "#FF6B6B"  # warm
+        cast_shadow: true
+      - type: "DirectionalLight"
+        position: [-5, 3, 0]
+        intensity: 1.5
+        color: "#4ECDC4"  # cool
+      - type: "AmbientLight"
+        intensity: 0.1
+        color: "#2A2A2A"
+    mood: "artistic, contrasting, dramatic"
+    shadow_quality: "colored, artistic"
+    
+  volumetric_fog:
+    name: "Volumetric Fog"
+    description: "Lights with visible volumetric scattering"
+    lights:
+      - type: "SpotLight"
+        position: [0, 5, -3]
+        intensity: 3.0
+        color: "#FFFFFF"
+        angle: 45  # degrees
+        penumbra: 0.5
+        decay: 2
+        volumetric: true
+      - type: "AmbientLight"
+        intensity: 0.2
+        color: "#404060"
+    mood: "atmospheric, god rays, concert lighting"
+    shadow_quality: "volumetric, atmospheric"
+    
+  rim_only:
+    name: "Rim Only"
+    description: "Backlight emphasizing silhouette and edges"
+    lights:
+      - type: "DirectionalLight"
+        position: [0, 2, -5]
+        intensity: 2.0
+        color: "#FFFFFF"
+      - type: "DirectionalLight"
+        position: [3, 2, -5]
+        intensity: 1.5
+        color: "#FFFFFF"
+      - type: "DirectionalLight"
+        position: [-3, 2, -5]
+        intensity: 1.5
+        color: "#FFFFFF"
+      - type: "AmbientLight"
+        intensity: 0.05
+        color: "#000000"
+    mood: "silhouette, contour, graphic"
+    shadow_quality: "none visible"
+
+spatial_compositions:
+  centered:
+    name: "Centered"
+    description: "Single object at origin"
+    object_count: 1
+    arrangement: "origin"
+    camera_default: [0, 0, 5]
+    visual_balance: "symmetric, focal"
+    
+  grid:
+    name: "Grid"
+    description: "Regular orthogonal grid arrangement"
+    object_count: "multiple"
+    arrangement: "grid_pattern"
+    parameters:
+      spacing: 2.0
+      rows: 3
+      columns: 3
+    camera_default: [0, 5, 10]
+    visual_balance: "ordered, systematic"
+    
+  circular:
+    name: "Circular"
+    description: "Objects arranged in circle"
+    object_count: "multiple"
+    arrangement: "circular"
+    parameters:
+      radius: 3.0
+      count: 8
+    camera_default: [0, 5, 10]
+    visual_balance: "radial symmetry, unity"
+    
+  spiral:
+    name: "Spiral"
+    description: "Objects following spiral path"
+    object_count: "multiple"
+    arrangement: "spiral"
+    parameters:
+      radius_start: 0.5
+      radius_end: 4.0
+      height_change: 2.0
+      count: 12
+    camera_default: [5, 5, 5]
+    visual_balance: "dynamic, growth pattern"
+    
+  random_scatter:
+    name: "Random Scatter"
+    description: "Randomly distributed in volume"
+    object_count: "multiple"
+    arrangement: "random"
+    parameters:
+      bounds: 5.0  # cube extent
+      count: 20
+      min_distance: 0.5  # avoid overlap
+    camera_default: [0, 0, 10]
+    visual_balance: "organic, chaotic"
+    
+  fibonacci_sphere:
+    name: "Fibonacci Sphere"
+    description: "Evenly distributed on sphere surface"
+    object_count: "multiple"
+    arrangement: "fibonacci_sphere"
+    parameters:
+      radius: 3.0
+      count: 50
+    camera_default: [0, 0, 8]
+    visual_balance: "natural distribution, spherical"
+
+intentionality: |
+  **Color Psychology:**
+  Colors evoke emotional responses and set visual mood.
+  Palettes should match intent: cyberpunk = neon night,
+  pastel = soft/gentle, monochrome = sophistication.
+  
+  **Lighting Principles:**
+  Lighting creates depth, mood, and directs attention.
+  - Dramatic: high contrast, defined shadows
+  - Soft: even diffusion, minimal shadows
+  - Colored: artistic expression, emotional temperature
+  - Atmospheric: fog/volumetrics add depth
+  
+  **Three.js Lighting Types:**
+  - AmbientLight: uniform illumination, no shadows
+  - DirectionalLight: parallel rays (sun-like), shadows
+  - PointLight: omnidirectional from point, distance falloff
+  - SpotLight: cone of light, shadows, focused
+  - HemisphereLight: sky/ground gradient, outdoor feel
+  
+  **Spatial Composition:**
+  Object arrangement creates visual hierarchy and flow.
+  Grid = order/system, circular = unity, random = organic,
+  centered = focus, spiral = growth/evolution.
+  
+  **Performance:**
+  More lights = higher cost. Shadows = expensive.
+  Ambient/Hemisphere = cheap. Spot/Point with shadows = costly.
+  Limit real-time lights to 3-5 for performance.

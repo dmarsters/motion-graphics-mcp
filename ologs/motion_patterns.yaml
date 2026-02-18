@@ -1,0 +1,410 @@
+# Motion Patterns Taxonomy
+# Layer 1 - Pure taxonomy (zero LLM cost)
+
+basic_motions:
+  rotate:
+    name: "Rotate"
+    description: "Continuous rotation around axis"
+    animation_type: "rotation"
+    parameters:
+      axis: "y"  # x, y, z
+      speed: 1.0  # radians per second
+      direction: "clockwise"
+    visual_character: "spinning, orbital, cyclic"
+    temporal_pattern: "continuous, periodic"
+    
+  pulse:
+    name: "Pulse"
+    description: "Scale oscillation (grow/shrink)"
+    animation_type: "scale"
+    parameters:
+      scale_min: 0.8
+      scale_max: 1.2
+      frequency: 1.0  # Hz
+      ease: "sine"  # sine, linear, elastic
+    visual_character: "breathing, heartbeat, emphasis"
+    temporal_pattern: "periodic, symmetric"
+    
+  flow:
+    name: "Flow"
+    description: "Smooth linear translation"
+    animation_type: "position"
+    parameters:
+      direction: [1, 0, 0]  # normalized vector
+      speed: 2.0  # units per second
+      loop: true
+    visual_character: "drifting, streaming, directional"
+    temporal_pattern: "continuous, linear"
+    
+  spiral:
+    name: "Spiral"
+    description: "Circular motion with ascending/descending component"
+    animation_type: "position"
+    parameters:
+      radius: 2.0
+      height: 4.0
+      rotation_speed: 1.0  # revolutions per second
+      vertical_speed: 1.0
+    visual_character: "helical, ascending, DNA-like"
+    temporal_pattern: "continuous, compound"
+    
+  expand:
+    name: "Expand"
+    description: "Continuous scale increase"
+    animation_type: "scale"
+    parameters:
+      growth_rate: 0.5  # scale units per second
+      max_scale: 5.0
+      reset: true  # jump back to min when max reached
+    visual_character: "growing, exploding, expanding"
+    temporal_pattern: "linear growth, optional reset"
+
+complex_paths:
+  figure_eight:
+    name: "Figure Eight"
+    description: "Lemniscate curve (infinity symbol path)"
+    animation_type: "position"
+    parameters:
+      width: 2.0
+      height: 1.0
+      speed: 1.0  # cycles per second
+      orientation: "horizontal"  # horizontal or vertical
+    visual_character: "infinity loop, elegant crossing"
+    temporal_pattern: "periodic, self-intersecting"
+    mathematical_form: "x = a*sin(t), y = b*sin(2t)"
+    
+  lissajous:
+    name: "Lissajous"
+    description: "Parametric curve A*sin(a*t + δ), B*sin(b*t)"
+    animation_type: "position"
+    parameters:
+      amplitude_x: 2.0
+      amplitude_y: 1.5
+      frequency_x: 3.0
+      frequency_y: 2.0
+      phase_offset: 0.0  # radians
+    visual_character: "complex periodic, harmonic resonance"
+    temporal_pattern: "quasi-periodic, ratio-dependent"
+    mathematical_form: "x = A*sin(a*t + δ), y = B*sin(b*t)"
+    
+  orbital:
+    name: "Orbital"
+    description: "Elliptical orbit around point"
+    animation_type: "position"
+    parameters:
+      semi_major_axis: 3.0
+      semi_minor_axis: 2.0
+      orbital_speed: 1.0  # revolutions per second
+      center_point: [0, 0, 0]
+      tilt_angle: 0.0  # inclination in degrees
+    visual_character: "planetary, Keplerian, celestial"
+    temporal_pattern: "periodic, elliptical"
+    
+  bezier_path:
+    name: "Bezier Path"
+    description: "Smooth curve following control points"
+    animation_type: "position"
+    parameters:
+      control_points: [
+        [0, 0, 0],
+        [1, 2, 0],
+        [3, 2, 0],
+        [4, 0, 0]
+      ]
+      speed: 1.0  # path units per second
+      loop: false
+    visual_character: "smooth trajectory, designer curves"
+    temporal_pattern: "defined path, controlled motion"
+
+physics_based:
+  gravity_fall:
+    name: "Gravity Fall"
+    description: "Falling with acceleration"
+    animation_type: "position"
+    parameters:
+      gravity: 9.8  # m/s²
+      initial_velocity: [0, 0, 0]
+      bounce_coefficient: 0.7  # energy retention on bounce
+      floor_y: 0.0
+    visual_character: "natural fall, accelerating, impact"
+    temporal_pattern: "quadratic motion, bouncing"
+    physics_model: "y = y0 + v0*t + 0.5*g*t²"
+    
+  spring_bounce:
+    name: "Spring Bounce"
+    description: "Damped harmonic oscillator"
+    animation_type: "position"
+    parameters:
+      stiffness: 100.0  # spring constant k
+      damping: 10.0  # damping coefficient
+      mass: 1.0
+      rest_position: 0.0
+    visual_character: "springy, overshooting, settling"
+    temporal_pattern: "exponentially damped oscillation"
+    physics_model: "F = -kx - cv"
+    
+  pendulum:
+    name: "Pendulum"
+    description: "Sinusoidal swing"
+    animation_type: "rotation"
+    parameters:
+      length: 2.0  # pendulum length
+      max_angle: 45.0  # degrees
+      gravity: 9.8
+      damping: 0.05  # air resistance
+    visual_character: "swinging, periodic, hypnotic"
+    temporal_pattern: "sinusoidal, gradually damping"
+    physics_model: "θ'' = -(g/L)*sin(θ)"
+    
+  projectile:
+    name: "Projectile"
+    description: "Parabolic arc with gravity"
+    animation_type: "position"
+    parameters:
+      initial_velocity: [5, 10, 0]  # m/s
+      launch_angle: 45.0  # degrees
+      gravity: 9.8
+      air_resistance: 0.1
+    visual_character: "thrown, ballistic, arcing"
+    temporal_pattern: "parabolic trajectory"
+    physics_model: "ballistic motion with drag"
+
+organic:
+  breathing:
+    name: "Breathing"
+    description: "Slow expand/contract like respiration"
+    animation_type: "scale"
+    parameters:
+      inhale_duration: 2.0  # seconds
+      exhale_duration: 3.0
+      scale_range: 0.15  # ±15% from base
+      ease_curve: "cubic_ease_in_out"
+    visual_character: "alive, calm, rhythmic"
+    temporal_pattern: "asymmetric periodic, organic timing"
+    
+  morph:
+    name: "Morph"
+    description: "Vertex interpolation between shapes"
+    animation_type: "geometry"
+    parameters:
+      target_geometry: "sphere"  # morph target
+      morph_speed: 0.5  # blend factor change per second
+      loop: "pingpong"  # forward-back or one-way
+    visual_character: "transforming, fluid, shapeshifting"
+    temporal_pattern: "interpolated, controlled blend"
+    
+  undulate:
+    name: "Undulate"
+    description: "Wave propagation across surface"
+    animation_type: "vertex_displacement"
+    parameters:
+      wave_amplitude: 0.2
+      wave_frequency: 2.0  # waves per unit
+      wave_speed: 1.0  # propagation speed
+      axis: "x"  # propagation direction
+    visual_character: "rippling, wave-like, flowing"
+    temporal_pattern: "traveling wave, continuous"
+    
+  wiggle:
+    name: "Wiggle"
+    description: "Random offset with smoothing"
+    animation_type: "position"
+    parameters:
+      intensity: 0.5  # maximum displacement
+      frequency: 2.0  # changes per second
+      octaves: 3  # noise detail levels
+      smoothing: 0.8  # interpolation factor
+    visual_character: "jittery, organic randomness, alive"
+    temporal_pattern: "stochastic, smooth noise"
+
+mathematical:
+  sine_wave:
+    name: "Sine Wave"
+    description: "Sinusoidal position oscillation"
+    animation_type: "position"
+    parameters:
+      amplitude: 2.0
+      frequency: 1.0  # Hz
+      axis: "y"
+      phase_offset: 0.0
+    visual_character: "wave-like, periodic, fundamental"
+    temporal_pattern: "pure sinusoid, symmetric"
+    mathematical_form: "y = A*sin(2πft + φ)"
+    
+  noise_driven:
+    name: "Noise Driven"
+    description: "Perlin/simplex noise movement"
+    animation_type: "position"
+    parameters:
+      noise_scale: 2.0  # spatial frequency
+      time_scale: 0.5  # temporal evolution
+      amplitude: 1.0
+      octaves: 4  # detail levels
+    visual_character: "organic randomness, natural variation"
+    temporal_pattern: "pseudo-random, smooth"
+    
+  fibonacci_spiral:
+    name: "Fibonacci Spiral"
+    description: "Golden ratio expansion spiral"
+    animation_type: "position"
+    parameters:
+      growth_factor: 1.618  # golden ratio
+      rotation_speed: 1.0
+      expansion_speed: 0.5
+    visual_character: "natural growth, golden ratio, nautilus"
+    temporal_pattern: "logarithmic expansion"
+    mathematical_form: "r = φ^(θ/90°)"
+    
+  fourier_series:
+    name: "Fourier Series"
+    description: "Sum of multiple sine waves"
+    animation_type: "position"
+    parameters:
+      harmonics: [
+        {"amplitude": 1.0, "frequency": 1.0, "phase": 0.0},
+        {"amplitude": 0.5, "frequency": 2.0, "phase": 0.0},
+        {"amplitude": 0.25, "frequency": 4.0, "phase": 0.0}
+      ]
+      axis: "y"
+    visual_character: "complex periodic, harmonic series"
+    temporal_pattern: "sum of sinusoids, rich periodicity"
+    mathematical_form: "f(t) = Σ Aₙ*sin(nωt + φₙ)"
+
+interactions:
+  follow_path:
+    name: "Follow Path"
+    description: "Move along predefined spline"
+    animation_type: "position"
+    parameters:
+      spline_points: [[0,0,0], [1,1,0], [2,1,0], [3,0,0]]
+      speed: 2.0  # path units per second
+      look_ahead: 0.1  # for orientation
+      loop: true
+    visual_character: "rail-guided, predetermined, smooth"
+    temporal_pattern: "path-constrained, continuous"
+    
+  avoid_collision:
+    name: "Avoid Collision"
+    description: "Repel from other objects"
+    animation_type: "position"
+    parameters:
+      avoidance_radius: 2.0
+      repulsion_strength: 5.0
+      max_speed: 3.0
+      target_objects: []  # references to other objects
+    visual_character: "reactive, spatial awareness, organic"
+    temporal_pattern: "dynamic, force-based"
+    
+  flock_behavior:
+    name: "Flock Behavior"
+    description: "Boids - cohesion/separation/alignment"
+    animation_type: "position"
+    parameters:
+      cohesion_weight: 1.0  # attract to center of mass
+      separation_weight: 1.5  # avoid crowding
+      alignment_weight: 1.0  # match neighbor velocities
+      perception_radius: 3.0
+      max_speed: 2.0
+    visual_character: "swarm, emergent, collective"
+    temporal_pattern: "emergent group behavior"
+    
+  look_at_camera:
+    name: "Look At Camera"
+    description: "Billboard effect - always face camera"
+    animation_type: "rotation"
+    parameters:
+      lock_axis: null  # optional: lock rotation to single axis
+    visual_character: "flat sprite, always visible, UI-like"
+    temporal_pattern: "camera-dependent, instant"
+
+compound:
+  rotate_and_scale:
+    name: "Rotate and Scale"
+    description: "Simultaneous spin and size change"
+    animation_type: "compound"
+    parameters:
+      rotation_speed: 2.0
+      rotation_axis: "y"
+      pulse_frequency: 1.0
+      scale_range: [0.5, 1.5]
+    visual_character: "dynamic, energetic, complex"
+    temporal_pattern: "multiple simultaneous animations"
+    
+  spiral_pulse:
+    name: "Spiral Pulse"
+    description: "Spiral path with size oscillation"
+    animation_type: "compound"
+    parameters:
+      spiral_radius: 2.0
+      spiral_height: 4.0
+      rotation_speed: 1.0
+      pulse_frequency: 2.0
+      scale_range: [0.8, 1.2]
+    visual_character: "DNA-like, pulsing helix"
+    temporal_pattern: "helical motion + periodic scale"
+    
+  orbit_rotate:
+    name: "Orbit Rotate"
+    description: "Orbit center point while self-rotating"
+    animation_type: "compound"
+    parameters:
+      orbit_radius: 3.0
+      orbit_speed: 0.5  # revolutions per second
+      self_rotation_speed: 3.0
+      orbit_center: [0, 0, 0]
+    visual_character: "planetary, moon-like, dual rotation"
+    temporal_pattern: "orbital + spin"
+    
+  wobble_spin:
+    name: "Wobble Spin"
+    description: "Rotation with position noise"
+    animation_type: "compound"
+    parameters:
+      rotation_speed: 2.0
+      rotation_axis: "y"
+      wobble_intensity: 0.3
+      wobble_frequency: 3.0
+    visual_character: "drunk, unsteady, character"
+    temporal_pattern: "rotation + smooth noise"
+
+intentionality: |
+  Motion patterns bring objects to life through temporal dynamics.
+  
+  **Motion Hierarchy:**
+  - Basic motions (rotate, pulse) = fundamental building blocks
+  - Complex paths (lissajous, bezier) = designer trajectories
+  - Physics-based = natural realism, believable dynamics
+  - Organic = alive, breathing, unpredictable
+  - Mathematical = precise, elegant, intellectual
+  - Interactions = spatial awareness, reactive
+  - Compound = rich complexity from combination
+  
+  **Three.js Animation System:**
+  Motions implemented as animation loops updating object properties
+  (position, rotation, scale) each frame. Physics simulations use
+  integration over time. Path following uses parametric evaluation.
+  
+  **Temporal Characteristics:**
+  - Periodic: repeating pattern, predictable
+  - Linear: constant rate, no acceleration
+  - Quadratic: accelerating, physics-like
+  - Damped: decreasing amplitude over time
+  - Stochastic: random but smooth
+  - Emergent: complex from simple rules
+  
+  **Performance Considerations:**
+  Simple property updates (rotate, scale) = cheap
+  Physics simulations = moderate (velocity integration)
+  Complex curves (bezier) = moderate (parametric evaluation)
+  Interactions (flocking) = expensive (N² neighbor checks)
+  Vertex displacement = very expensive (per-vertex calculation)
+  
+  **Selection Criteria:**
+  Match motion to intent: mechanical (rotate), organic (breathing),
+  natural (gravity), mathematical (sine), reactive (flock).
+  Consider performance budget and desired visual complexity.
+  
+  **Easing Functions:**
+  All motions support easing curves (linear, sine, cubic, elastic)
+  to add character to transitions: ease-in (slow start),
+  ease-out (slow end), ease-in-out (smooth both ends).

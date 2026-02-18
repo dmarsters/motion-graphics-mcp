@@ -1,0 +1,291 @@
+# Geometric Primitives Taxonomy
+# Layer 1 - Pure taxonomy (zero LLM cost)
+
+basic_primitives:
+  sphere:
+    name: "Sphere"
+    description: "Perfect spherical form"
+    threejs_geometry: "SphereGeometry"
+    parameters:
+      radius: 1.0
+      widthSegments: 32
+      heightSegments: 32
+    complexity: "simple"
+    visual_character: "smooth, uniform, radially symmetric"
+    
+  cube:
+    name: "Cube"
+    description: "Six equal square faces"
+    threejs_geometry: "BoxGeometry"
+    parameters:
+      width: 1.0
+      height: 1.0
+      depth: 1.0
+    complexity: "simple"
+    visual_character: "angular, rigid, orthogonal"
+    
+  torus:
+    name: "Torus"
+    description: "Donut-shaped ring"
+    threejs_geometry: "TorusGeometry"
+    parameters:
+      radius: 1.0
+      tube: 0.4
+      radialSegments: 16
+      tubularSegments: 100
+    complexity: "medium"
+    visual_character: "curved, flowing, topologically interesting"
+    
+  cylinder:
+    name: "Cylinder"
+    description: "Circular cross-section with height"
+    threejs_geometry: "CylinderGeometry"
+    parameters:
+      radiusTop: 1.0
+      radiusBottom: 1.0
+      height: 2.0
+      radialSegments: 32
+    complexity: "simple"
+    visual_character: "linear, axial, rotational symmetry"
+    
+  plane:
+    name: "Plane"
+    description: "Flat two-dimensional surface"
+    threejs_geometry: "PlaneGeometry"
+    parameters:
+      width: 2.0
+      height: 2.0
+      widthSegments: 1
+      heightSegments: 1
+    complexity: "simple"
+    visual_character: "flat, minimal, foundational"
+
+platonic_archimedean_solids:
+  tetrahedron:
+    name: "Tetrahedron"
+    description: "Four triangular faces, simplest Platonic solid"
+    threejs_geometry: "TetrahedronGeometry"
+    parameters:
+      radius: 1.0
+      detail: 0
+    complexity: "medium"
+    visual_character: "sharp, minimal, triangular facets"
+    
+  octahedron:
+    name: "Octahedron"
+    description: "Eight triangular faces, dual of cube"
+    threejs_geometry: "OctahedronGeometry"
+    parameters:
+      radius: 1.0
+      detail: 0
+    complexity: "medium"
+    visual_character: "diamond-like, faceted, symmetric"
+    
+  dodecahedron:
+    name: "Dodecahedron"
+    description: "Twelve pentagonal faces"
+    threejs_geometry: "DodecahedronGeometry"
+    parameters:
+      radius: 1.0
+      detail: 0
+    complexity: "complex"
+    visual_character: "organic, pentagonal symmetry, approaching spherical"
+    
+  icosahedron:
+    name: "Icosahedron"
+    description: "Twenty triangular faces, most faces of Platonic solids"
+    threejs_geometry: "IcosahedronGeometry"
+    parameters:
+      radius: 1.0
+      detail: 0
+    complexity: "complex"
+    visual_character: "near-spherical, triangular facets, crystalline"
+    
+  icosphere:
+    name: "Icosphere"
+    description: "Subdivided icosahedron for smooth sphere approximation"
+    threejs_geometry: "IcosahedronGeometry"
+    parameters:
+      radius: 1.0
+      detail: 2  # subdivision level
+    complexity: "medium"
+    visual_character: "smooth spherical, uniform tessellation, efficient"
+    
+  geodesic_dome:
+    name: "Geodesic Dome"
+    description: "Subdivided icosahedron with parametric structure"
+    threejs_geometry: "IcosahedronGeometry"
+    parameters:
+      radius: 1.0
+      detail: 3  # higher subdivision
+    complexity: "complex"
+    visual_character: "architectural, structural, Buckminster Fuller aesthetic"
+
+parametric_surfaces:
+  torus_knot:
+    name: "Torus Knot"
+    description: "Parametric knot wound around torus surface"
+    threejs_geometry: "TorusKnotGeometry"
+    parameters:
+      radius: 1.0
+      tube: 0.4
+      tubularSegments: 64
+      radialSegments: 8
+      p: 2  # winding number around axis
+      q: 3  # winding number through hole
+    complexity: "complex"
+    visual_character: "mathematical, intertwined, elegant complexity"
+    
+  mobius_strip:
+    name: "Mobius Strip"
+    description: "Single-sided surface with one twist"
+    custom_geometry: "mobius_strip"
+    parameters:
+      radius: 1.0
+      width: 0.5
+      twists: 1
+      segments: 60
+    complexity: "complex"
+    visual_character: "paradoxical, infinite loop, topologically fascinating"
+    
+  klein_bottle:
+    name: "Klein Bottle"
+    description: "4D surface embedded in 3D, no inside/outside"
+    custom_geometry: "klein_bottle"
+    parameters:
+      radius: 1.0
+      segments: 32
+    complexity: "very_complex"
+    visual_character: "impossible, self-intersecting, mind-bending"
+    
+  helix:
+    name: "Helix"
+    description: "Spiral curve in 3D space"
+    custom_geometry: "helix"
+    parameters:
+      radius: 1.0
+      height: 4.0
+      coils: 3.0
+      segments: 100
+      tube_radius: 0.1
+    complexity: "medium"
+    visual_character: "spiral, ascending, DNA-like"
+    
+  spring:
+    name: "Spring"
+    description: "Coiled helix with variable radius"
+    custom_geometry: "spring"
+    parameters:
+      radius: 1.0
+      height: 4.0
+      coils: 5.0
+      segments: 120
+      tube_radius: 0.15
+    complexity: "medium"
+    visual_character: "mechanical, compressed energy, coiled tension"
+
+complex_forms:
+  voronoi_mesh:
+    name: "Voronoi Mesh"
+    description: "Organic cell-like structure from Voronoi diagram"
+    custom_geometry: "voronoi_mesh"
+    parameters:
+      points: 20
+      bounds: 2.0
+      thickness: 0.05
+    complexity: "very_complex"
+    visual_character: "organic, cellular, natural partitioning"
+    
+  fractal_geometry:
+    name: "Fractal Geometry"
+    description: "Self-similar recursive structure (Menger sponge, Sierpinski)"
+    custom_geometry: "fractal"
+    parameters:
+      type: "menger_sponge"  # or "sierpinski"
+      iterations: 3
+      scale: 1.0
+    complexity: "very_complex"
+    visual_character: "recursive, infinite detail, mathematical beauty"
+    
+  subdiv_sphere:
+    name: "Subdivision Sphere"
+    description: "Smoothed polygonal sphere via subdivision surfaces"
+    threejs_geometry: "SphereGeometry"
+    parameters:
+      radius: 1.0
+      widthSegments: 64
+      heightSegments: 64
+    complexity: "medium"
+    visual_character: "perfectly smooth, high-poly, polished"
+    
+  capsule:
+    name: "Capsule"
+    description: "Cylinder with hemispherical ends"
+    custom_geometry: "capsule"
+    parameters:
+      radius: 0.5
+      height: 2.0
+      capSegments: 16
+      radialSegments: 32
+    complexity: "medium"
+    visual_character: "pill-shaped, pharmaceutical, smooth transitions"
+
+deformed_primitives:
+  twisted_cube:
+    name: "Twisted Cube"
+    description: "Cube with rotation deformation along vertical axis"
+    custom_geometry: "twisted_cube"
+    parameters:
+      size: 1.0
+      twist_amount: 45.0  # degrees
+      segments: 20
+    complexity: "medium"
+    visual_character: "dynamic, torqued, helical distortion"
+    
+  bent_plane:
+    name: "Bent Plane"
+    description: "Plane curved into arc or wave"
+    custom_geometry: "bent_plane"
+    parameters:
+      width: 2.0
+      height: 2.0
+      bend_amount: 90.0  # degrees of arc
+      segments: 32
+    complexity: "medium"
+    visual_character: "flowing, draped, architectural curve"
+    
+  noise_displaced:
+    name: "Noise Displaced"
+    description: "Surface with procedural noise displacement"
+    custom_geometry: "noise_displaced"
+    parameters:
+      base_geometry: "sphere"  # or cube, plane
+      noise_scale: 0.3
+      noise_frequency: 2.0
+      detail: 3
+    complexity: "complex"
+    visual_character: "organic, irregular, terrain-like"
+
+intentionality: |
+  Geometric primitives provide the structural foundation for motion graphics.
+  
+  **Visual Hierarchy:**
+  - Simple primitives (sphere, cube) = clarity, minimalism, instant recognition
+  - Platonic solids = mathematical purity, sacred geometry, crystalline aesthetics
+  - Parametric surfaces = mathematical elegance, impossible forms, intellectual fascination
+  - Complex forms = organic realism, natural patterns, computational aesthetics
+  - Deformed primitives = dynamic energy, transformation, non-rigid motion
+  
+  **Three.js Integration:**
+  All primitives map directly to Three.js geometry constructors or custom BufferGeometry.
+  Parameters are validated ranges that prevent degenerate geometry (e.g., zero radius).
+  
+  **Complexity Levels:**
+  - simple: <500 vertices, real-time rendering on any device
+  - medium: 500-5000 vertices, requires moderate GPU
+  - complex: 5000-50000 vertices, needs good GPU
+  - very_complex: 50000+ vertices or custom algorithms, high-end only
+  
+  **Selection Criteria:**
+  Choose based on visual intent (angular vs organic), performance needs,
+  and whether the form itself carries semantic meaning (DNA helix, architectural dome).

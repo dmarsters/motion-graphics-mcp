@@ -1,0 +1,378 @@
+olog_name: motion_graphics_aesthetics
+version: "1.0"
+description: |
+  Categorical taxonomy for procedural motion graphics generation.
+  Maps OBJECT/LOOK/ACTION structure to Three.js/WebGL parameters.
+  
+  Semantic Bridge:
+  - OBJECT = geometric_primitive + spatial_composition
+  - LOOK = material_system + color_palette + lighting_mood
+  - ACTION = motion_pattern + temporal_rhythm
+
+intentionality: |
+  This olog formalizes the procedural motion graphics design space as a
+  categorical structure, enabling deterministic mapping from aesthetic
+  intent to WebGL/Three.js parameters.
+  
+  WHY THIS WORKS:
+  - Procedural motion (code-driven) is superior to manual keyframing
+  - Mathematical functions create smooth, organic movement
+  - Deterministic parameters enable reproducibility and composition
+  - Separation of structure (Layer 1-2) from synthesis (Layer 3)
+  
+  The OBJECT/LOOK/ACTION pattern is a natural functor from aesthetic
+  intent to executable code.
+
+# LAYER 1: FOUNDATION TAXONOMIES (0 tokens)
+
+geometric_primitives:
+  sphere:
+    description: "Perfect sphere, radially symmetric"
+    threejs_geometry: "SphereGeometry"
+    default_params: { radius: 1, widthSegments: 32, heightSegments: 32 }
+    visual_qualities: ["smooth", "organic", "unified"]
+    
+  cube:
+    description: "Box with sharp edges, orthogonal faces"
+    threejs_geometry: "BoxGeometry"
+    default_params: { width: 1, height: 1, depth: 1 }
+    visual_qualities: ["structured", "precise", "architectural"]
+    
+  torus:
+    description: "Donut shape, continuous curved surface"
+    threejs_geometry: "TorusGeometry"
+    default_params: { radius: 1, tube: 0.4, radialSegments: 16, tubularSegments: 100 }
+    visual_qualities: ["flowing", "continuous", "hypnotic"]
+    
+  cylinder:
+    description: "Cylindrical form, axis-aligned"
+    threejs_geometry: "CylinderGeometry"
+    default_params: { radiusTop: 1, radiusBottom: 1, height: 2, radialSegments: 32 }
+    visual_qualities: ["elongated", "directional", "industrial"]
+    
+  plane:
+    description: "Flat 2D surface, billboard or ground"
+    threejs_geometry: "PlaneGeometry"
+    default_params: { width: 2, height: 2, widthSegments: 1, heightSegments: 1 }
+    visual_qualities: ["flat", "minimal", "graphic"]
+    
+  text_3d:
+    description: "Extruded 3D text geometry"
+    threejs_geometry: "TextGeometry"
+    default_params: { size: 1, height: 0.2, curveSegments: 12 }
+    visual_qualities: ["typographic", "communicative", "dimensional"]
+    
+  icosahedron:
+    description: "20-sided polyhedron, geodesic structure"
+    threejs_geometry: "IcosahedronGeometry"
+    default_params: { radius: 1, detail: 0 }
+    visual_qualities: ["geometric", "complex", "crystalline"]
+    
+  particle_system:
+    description: "Collection of points forming emergent patterns"
+    threejs_geometry: "BufferGeometry (points)"
+    default_params: { count: 1000, spread: 5 }
+    visual_qualities: ["distributed", "emergent", "atmospheric"]
+
+material_systems:
+  metallic:
+    description: "Shiny metallic surface with sharp reflections"
+    threejs_material: "MeshStandardMaterial"
+    base_params:
+      metalness: 1.0
+      roughness: 0.2
+    visual_effect: "Sharp highlights, strong reflections, industrial feel"
+    
+  glass:
+    description: "Transparent or frosted glass material"
+    threejs_material: "MeshPhysicalMaterial"
+    base_params:
+      metalness: 0.0
+      roughness: 0.1
+      transmission: 0.9
+      thickness: 0.5
+    visual_effect: "Refractive, transparent, delicate"
+    
+  neon:
+    description: "Glowing emissive material, self-illuminated"
+    threejs_material: "MeshStandardMaterial"
+    base_params:
+      metalness: 0.0
+      roughness: 0.5
+      emissive: true
+      emissiveIntensity: 2.0
+    visual_effect: "Self-lit glow, vibrant, attention-grabbing"
+    
+  matte:
+    description: "Non-reflective diffuse surface"
+    threejs_material: "MeshStandardMaterial"
+    base_params:
+      metalness: 0.0
+      roughness: 1.0
+    visual_effect: "Soft, subtle, minimal reflections"
+    
+  holographic:
+    description: "Iridescent, rainbow-shifting material"
+    threejs_material: "ShaderMaterial (custom)"
+    base_params:
+      iridescence: 1.0
+      iridescenceIOR: 1.3
+    visual_effect: "Color-shifting, futuristic, ethereal"
+    
+  plastic:
+    description: "Smooth plastic with moderate reflections"
+    threejs_material: "MeshStandardMaterial"
+    base_params:
+      metalness: 0.0
+      roughness: 0.4
+    visual_effect: "Clean, synthetic, consumer product"
+
+motion_patterns:
+  rotate:
+    description: "Continuous rotation around axis"
+    animation_function: "rotation"
+    default_params:
+      axis: "y"
+      speed: 0.01
+      direction: 1
+    visual_rhythm: "steady, hypnotic, meditative"
+    
+  pulse:
+    description: "Rhythmic scale expansion/contraction"
+    animation_function: "scale"
+    default_params:
+      function: "sin"
+      frequency: 1.0
+      amplitude: 0.2
+      base_scale: 1.0
+    visual_rhythm: "breathing, organic, alive"
+    
+  float:
+    description: "Gentle vertical oscillation"
+    animation_function: "position"
+    default_params:
+      axis: "y"
+      function: "sin"
+      frequency: 0.5
+      amplitude: 0.3
+    visual_rhythm: "weightless, dreamy, suspended"
+    
+  spiral:
+    description: "Helical motion combining rotation and translation"
+    animation_function: "compound"
+    default_params:
+      rotate_axis: "y"
+      rotate_speed: 0.02
+      translate_radius: 2.0
+      translate_speed: 0.01
+    visual_rhythm: "complex, mesmerizing, dimensional"
+    
+  expand:
+    description: "Progressive scale increase (non-looping or looped)"
+    animation_function: "scale"
+    default_params:
+      function: "linear"
+      rate: 0.01
+      max_scale: 3.0
+      loop: true
+    visual_rhythm: "growing, explosive, expansive"
+    
+  wave:
+    description: "Sinusoidal deformation like water surface"
+    animation_function: "vertex_displacement"
+    default_params:
+      frequency: 2.0
+      amplitude: 0.5
+      speed: 1.0
+    visual_rhythm: "fluid, organic, natural"
+    
+  flicker:
+    description: "Rapid opacity/intensity variation"
+    animation_function: "opacity"
+    default_params:
+      function: "noise"
+      frequency: 5.0
+      intensity: 0.5
+    visual_rhythm: "glitchy, energetic, unstable"
+    
+  orbit:
+    description: "Circular path around center point"
+    animation_function: "position"
+    default_params:
+      radius: 3.0
+      speed: 0.5
+      axis: "y"
+    visual_rhythm: "planetary, systematic, circular"
+
+color_palettes:
+  cyberpunk:
+    primary: "#FF00FF"
+    secondary: "#00FFFF"
+    accent: "#FF0080"
+    background: "#0A0A0A"
+    mood: "neon, futuristic, high-contrast"
+    
+  warm_gold:
+    primary: "#FFD700"
+    secondary: "#FFA500"
+    accent: "#FF6347"
+    background: "#1A1A1A"
+    mood: "luxurious, warm, elegant"
+    
+  cool_blue:
+    primary: "#00BFFF"
+    secondary: "#4169E1"
+    accent: "#E0FFFF"
+    background: "#001020"
+    mood: "calm, technological, clean"
+    
+  monochrome:
+    primary: "#FFFFFF"
+    secondary: "#808080"
+    accent: "#C0C0C0"
+    background: "#000000"
+    mood: "minimal, stark, graphic"
+    
+  pastel_dream:
+    primary: "#FFB3BA"
+    secondary: "#BAE1FF"
+    accent: "#FFFFBA"
+    background: "#F5F5F5"
+    mood: "soft, dreamy, gentle"
+    
+  fire:
+    primary: "#FF4500"
+    secondary: "#FFD700"
+    accent: "#FF0000"
+    background: "#0A0000"
+    mood: "intense, energetic, dangerous"
+    
+  forest:
+    primary: "#228B22"
+    secondary: "#32CD32"
+    accent: "#ADFF2F"
+    background: "#0F1F0F"
+    mood: "natural, organic, calming"
+
+lighting_moods:
+  dramatic_side:
+    type: "directional"
+    intensity: 1.5
+    position: [5, 3, 5]
+    color: "#FFFFFF"
+    ambient_intensity: 0.2
+    description: "Strong directional light from side, creating sharp shadows"
+    
+  soft_ambient:
+    type: "ambient"
+    intensity: 0.8
+    color: "#FFFFFF"
+    ambient_intensity: 0.8
+    description: "Even, diffused lighting with minimal shadows"
+    
+  neon_glow:
+    type: "point"
+    intensity: 2.0
+    position: [0, 0, 5]
+    color: "#FF00FF"
+    ambient_intensity: 0.3
+    description: "Colored point light creating glow effect"
+    
+  rim_light:
+    type: "directional"
+    intensity: 2.0
+    position: [-5, 0, -5]
+    color: "#00FFFF"
+    ambient_intensity: 0.1
+    description: "Backlight creating edge glow on objects"
+    
+  studio:
+    type: "three_point"
+    key_intensity: 1.5
+    fill_intensity: 0.5
+    rim_intensity: 1.0
+    ambient_intensity: 0.3
+    description: "Classic three-point lighting setup"
+
+spatial_compositions:
+  centered:
+    description: "Single object at origin"
+    position: [0, 0, 0]
+    camera_distance: 5
+    
+  grid_array:
+    description: "Regular grid of objects"
+    layout: "grid"
+    spacing: 2.0
+    count: [3, 3, 1]
+    
+  spiral_path:
+    description: "Objects arranged in spiral"
+    layout: "spiral"
+    radius_start: 1.0
+    radius_end: 5.0
+    count: 20
+    
+  random_scatter:
+    description: "Randomly distributed objects"
+    layout: "random"
+    bounds: [-5, 5]
+    count: 30
+    
+  orbital_ring:
+    description: "Objects in circular orbit"
+    layout: "circle"
+    radius: 4.0
+    count: 12
+
+temporal_rhythms:
+  constant:
+    description: "Steady, unchanging pace"
+    timing_function: "linear"
+    
+  accelerating:
+    description: "Gradually increasing speed"
+    timing_function: "ease-in"
+    
+  decelerating:
+    description: "Gradually decreasing speed"
+    timing_function: "ease-out"
+    
+  bounce:
+    description: "Elastic bounce at endpoints"
+    timing_function: "cubic-bezier(0.68, -0.55, 0.265, 1.55)"
+    
+  snap:
+    description: "Sharp, immediate transitions"
+    timing_function: "step-start"
+
+# LAYER 2: SEMANTIC ANCHORS (Functors to other domains)
+
+domain_functors:
+  cocktail_to_lighting:
+    description: "Map cocktail aesthetic mood to lighting configuration"
+    examples:
+      old_fashioned_tungsten_warmth: "dramatic_side with warm #FFA500 tint"
+      daiquiri_diffused_coolness: "soft_ambient with cool #E0FFFF tint"
+      negroni_dramatic_tension: "rim_light with red #FF0000 accent"
+      
+  origami_to_geometry:
+    description: "Map origami fold patterns to geometric structure"
+    examples:
+      radial_symmetry: "icosahedron or orbital_ring composition"
+      bilateral_symmetry: "centered with mirror duplicates"
+      modular_composition: "grid_array or spiral_path"
+      
+  jazz_to_rhythm:
+    description: "Map jazz temporal structure to motion timing"
+    examples:
+      swing_rhythm: "bounce timing with syncopated pulses"
+      bebop_intensity: "accelerating with high frequency"
+      modal_flow: "constant with slow floating motion"
+      
+  wine_to_material:
+    description: "Map wine tasting notes to material qualities"
+    examples:
+      full_bodied_tannic: "matte with dark metallic accents"
+      crisp_acidic: "glass with high transparency"
+      aged_complex: "metallic with warm gold tones"
