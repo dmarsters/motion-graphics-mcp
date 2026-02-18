@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "motion-graphics-mcp"
+version = "1.0.0"
+description = "Motion Graphics MCP - Comprehensive Three.js aesthetic enhancement with 100+ options"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastmcp",
+    "pyyaml"
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+
+
+[project.entry-points."fastmcp.cloud"]
+motion-graphics-mcp = "motion_graphics_mcp:mcp"
+
+[tool.uv]
+dev-dependencies = []
