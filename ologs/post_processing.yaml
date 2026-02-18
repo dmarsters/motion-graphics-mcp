@@ -1,0 +1,164 @@
+# Post-Processing Effects Taxonomy
+# Extends OBJECT × LOOK × ACTION → OBJECT × LOOK × ACTION × EFFECT
+#
+# All parameters map to Three.js EffectComposer passes.
+# Layer 1: Pure enumeration. Layer 2: Deterministic parameter mapping.
+
+intentionality: >
+  Post-processing transforms the rendered image before display,
+  adding cinematic qualities impossible through geometry and materials alone.
+  Effects compose additively — bloom + chromatic aberration + film grain
+  creates a distinct aesthetic greater than any single pass.
+  In the orbit composer context, effect intensity can be phase-driven:
+  bloom peaks at orbit climax, grain intensifies during tension phases,
+  DOF shifts track dominant domain transitions.
+
+bloom:
+  name: "Bloom / Glow"
+  description: "Light bleeds beyond bright regions, creating ethereal glow"
+  threejs_pass: "UnrealBloomPass"
+  import_path: "three/addons/postprocessing/UnrealBloomPass.js"
+  parameters:
+    threshold: 0.8
+    strength: 1.5
+    radius: 0.4
+  visual_character: "ethereal, luminous, dreamy"
+  intensity_range: [0.0, 3.0]
+  orbit_affinity:
+    peaks_at: "climax"
+    driven_by: "optical_intensity"
+
+chromatic_aberration:
+  name: "Chromatic Aberration"
+  description: "Color channels separate at edges, simulating lens imperfection"
+  threejs_pass: "ShaderPass"
+  shader: "chromatic_aberration_custom"
+  parameters:
+    offset_r: [0.002, 0.0]
+    offset_g: [0.0, 0.0]
+    offset_b: [-0.002, 0.0]
+  visual_character: "analog, imperfect, psychedelic at high values"
+  intensity_range: [0.0, 0.02]
+  orbit_affinity:
+    peaks_at: "reversal"
+    driven_by: "geometric_sharpness"
+
+film_grain:
+  name: "Film Grain"
+  description: "Analog noise texture overlaid on render"
+  threejs_pass: "ShaderPass"
+  shader: "film_grain_custom"
+  parameters:
+    intensity: 0.15
+    speed: 1.0
+    grain_size: 1.5
+  visual_character: "analog, textured, cinematic"
+  intensity_range: [0.0, 0.5]
+  orbit_affinity:
+    peaks_at: "tension"
+    driven_by: "surface_tension"
+
+depth_of_field:
+  name: "Depth of Field"
+  description: "Selective focus with foreground/background blur"
+  threejs_pass: "BokehPass"
+  import_path: "three/addons/postprocessing/BokehPass.js"
+  parameters:
+    focus: 5.0
+    aperture: 0.025
+    maxblur: 0.01
+  visual_character: "cinematic, focused, intimate"
+  intensity_range: [0.0, 0.05]
+  orbit_affinity:
+    peaks_at: "opening"
+    driven_by: "control_complexity"
+
+vignette:
+  name: "Vignette"
+  description: "Darkened edges draw focus to center"
+  threejs_pass: "ShaderPass"
+  shader: "vignette_custom"
+  parameters:
+    offset: 1.0
+    darkness: 1.2
+  visual_character: "focused, moody, theatrical"
+  intensity_range: [0.0, 2.0]
+  orbit_affinity:
+    peaks_at: "resolution"
+    driven_by: "aesthetic_intensity"
+
+color_grading:
+  name: "Color Grading / LUT"
+  description: "Global color transformation via lookup table or curves"
+  threejs_pass: "ShaderPass"
+  shader: "color_grading_custom"
+  parameters:
+    brightness: 0.0
+    contrast: 1.0
+    saturation: 1.0
+    hue_shift: 0.0
+    shadows_tint: [0.0, 0.0, 0.1]
+    highlights_tint: [0.1, 0.05, 0.0]
+  visual_character: "cinematic, atmospheric, mood-defining"
+  intensity_range: [-1.0, 1.0]
+  orbit_affinity:
+    peaks_at: "sustained"
+    driven_by: "aesthetic_intensity"
+
+pixelation:
+  name: "Pixelation"
+  description: "Reduce resolution for retro or abstract effect"
+  threejs_pass: "ShaderPass"
+  shader: "pixelation_custom"
+  parameters:
+    pixel_size: 4.0
+  visual_character: "retro, abstract, lo-fi"
+  intensity_range: [1.0, 32.0]
+  orbit_affinity:
+    peaks_at: "reversal"
+    driven_by: "micro_texture_density"
+
+glitch:
+  name: "Glitch"
+  description: "Digital artifact simulation — scanlines, displacement, color shift"
+  threejs_pass: "GlitchPass"
+  import_path: "three/addons/postprocessing/GlitchPass.js"
+  parameters:
+    dt_size: 64
+    wild: false
+  visual_character: "chaotic, digital, aggressive"
+  intensity_range: [0.0, 1.0]
+  orbit_affinity:
+    peaks_at: "climax"
+    driven_by: "geometric_sharpness"
+
+screen_space_reflections:
+  name: "Screen-Space Reflections"
+  description: "Real-time reflections computed from rendered frame"
+  threejs_pass: "SSRPass"
+  import_path: "three/addons/postprocessing/SSRPass.js"
+  parameters:
+    thickness: 0.018
+    maxDistance: 0.1
+    opacity: 0.5
+  visual_character: "polished, luxurious, architectural"
+  intensity_range: [0.0, 1.0]
+  orbit_affinity:
+    peaks_at: "sustained"
+    driven_by: "specularity"
+
+ambient_occlusion:
+  name: "Screen-Space Ambient Occlusion"
+  description: "Soft shadows in crevices and contact points"
+  threejs_pass: "SAOPass"
+  import_path: "three/addons/postprocessing/SAOPass.js"
+  parameters:
+    saoBias: 0.5
+    saoIntensity: 0.0025
+    saoScale: 1.0
+    saoKernelRadius: 100
+  visual_character: "grounded, dimensional, realistic"
+  intensity_range: [0.0, 0.01]
+  orbit_affinity:
+    peaks_at: "opening"
+    driven_by: "surface_tension"
