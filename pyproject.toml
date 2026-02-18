@@ -1,17 +1,17 @@
+[project]
+name = "motion-graphics-mcp"
+version = "2.0.0"
+description = "Three.js motion graphics aesthetic enhancement with code generation, post-processing, scene graph composition, and Orbit Composer integration"
+requires-python = ">=3.10"
+dependencies = ["fastmcp", "pyyaml"]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[project]
-name = "motion-graphics-mcp"
-version = "1.0.0"
-description = "Motion Graphics MCP - Comprehensive Three.js aesthetic enhancement with 100+ options"
-readme = "README.md"
-requires-python = ">=3.10"
-dependencies = ["fastmcp>=0.1.0", "pyyaml>=6.0"]
+[project.scripts]
+motion-graphics-mcp = "motion_graphics_mcp:main"
 
-[project.entry-points."fastmcp.cloud"]
-motion-graphics-mcp = "server:mcp"
+[tool.hatch.build.targets.wheel]
+packages = ["."]
 
-[tool.uv]
-dev-dependencies = []
