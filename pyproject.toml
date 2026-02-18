@@ -19,7 +19,7 @@ dev = ["pytest"]
 
 
 [project.entry-points."fastmcp.cloud"]
-motion-graphics-mcp = "motion_graphics_mcp:mcp"
+motion-graphics-mcp = "server:mcp"
 
 [tool.uv]
 dev-dependencies = []
