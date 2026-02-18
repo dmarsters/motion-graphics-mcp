@@ -722,6 +722,9 @@ def generate_threejs_html(
             effects_data.append((eff_name, eff))
     postproc_imports, postproc_setup, postproc_render = _build_postprocessing_js(effects_data)
 
+    # Determine if material needs envmap (metallic or physical with reflectivity)
+    needs_envmap = mat_type in ("MeshStandardMaterial", "MeshPhysicalMaterial")
+
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -731,19 +734,10 @@ def generate_threejs_html(
 <style>
   * {{ margin: 0; padding: 0; box-sizing: border-box; }}
   body {{ background: {background_color}; overflow: hidden; }}
-  canvas {{ display: block; }}
-  #info {{
-    position: absolute; bottom: 16px; left: 16px;
-    color: rgba(255,255,255,0.4); font: 11px/1.4 monospace;
-    pointer-events: none;
-  }}
+  canvas {{ display: block; width: 100%; height: 100vh; }}
 </style>
 </head>
 <body>
-<div id="info">
-  {primitive} · {material} · {motion}
-  {(' · ' + ' + '.join(effects)) if effects else ''}
-</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 {postproc_imports}
@@ -754,7 +748,8 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color('{background_color}');
 
 const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
-camera.position.set(0, {camera_distance * 0.4:.1f}, {camera_distance:.1f});
+const camDist = {camera_distance:.1f};
+camera.position.set(0, camDist * 0.35, camDist);
 camera.lookAt(0, 0, 0);
 
 const renderer = new THREE.WebGLRenderer({{ antialias: true, alpha: false }});
@@ -762,7 +757,13 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.2;
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
+
+{'// — Procedural environment map for reflections —' if needs_envmap else ''}
+{_build_envmap_js() if needs_envmap else ''}
 
 // — Geometry —
 {geometry_js}
@@ -771,7 +772,21 @@ document.body.appendChild(renderer.domElement);
 {material_js}
 
 const mesh = new THREE.Mesh(geometry, material);
+mesh.castShadow = true;
 scene.add(mesh);
+
+// — Ground plane (subtle reflective floor) —
+const groundGeo = new THREE.PlaneGeometry(40, 40);
+const groundMat = new THREE.MeshStandardMaterial({{
+  color: new THREE.Color('{background_color}').multiplyScalar(0.85),
+  metalness: 0.1,
+  roughness: 0.85,
+}});
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -1.8;
+ground.receiveShadow = true;
+scene.add(ground);
 
 // — Lighting —
 {lights_js}
@@ -787,8 +802,16 @@ const duration = {animation_duration};
 function animate() {{
   requestAnimationFrame(animate);
   const elapsed = clock.getElapsedTime();
-  const t = (elapsed % duration) / duration;  // normalized 0-1 loop
+  const t = (elapsed % duration) / duration;
 
+  // Camera auto-orbit
+  const camAngle = elapsed * 0.15;
+  camera.position.x = camDist * Math.sin(camAngle);
+  camera.position.z = camDist * Math.cos(camAngle);
+  camera.position.y = camDist * 0.35 + Math.sin(elapsed * 0.2) * 0.3;
+  camera.lookAt(0, 0, 0);
+
+  // Object motion
 {motion_js}
 
   {postproc_render}
@@ -810,6 +833,23 @@ window.addEventListener('resize', () => {{
 
 
 # ========== CODE GENERATION HELPERS ==========
+
+def _build_envmap_js() -> str:
+    """Generate procedural environment map for reflective materials.
+    Uses PMREMGenerator with a hemisphere light scene — r128 compatible."""
+    return """const pmremGenerator = new THREE.PMREMGenerator(renderer);
+pmremGenerator.compileEquirectangularShader();
+const envScene = new THREE.Scene();
+envScene.add(new THREE.HemisphereLight(0x6688cc, 0x223344, 1.0));
+const envDirLight = new THREE.DirectionalLight(0xffeedd, 0.8);
+envDirLight.position.set(5, 8, 3);
+envScene.add(envDirLight);
+const envFillLight = new THREE.PointLight(0xff8844, 0.4, 20);
+envFillLight.position.set(-4, 2, -3);
+envScene.add(envFillLight);
+const envRT = pmremGenerator.fromScene(envScene, 0.04);
+scene.environment = envRT.texture;
+pmremGenerator.dispose();"""
 
 def _build_geometry_js(geom_type: str, params: dict) -> str:
     """Generate Three.js geometry constructor from taxonomy."""
@@ -954,11 +994,18 @@ def _build_motion_js(motion: dict, duration: float) -> str:
 def _build_lights_js(lights_config: dict) -> str:
     """Generate Three.js lighting from taxonomy."""
     if not lights_config or "lights" not in lights_config:
-        return """const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+        return """const ambientLight = new THREE.HemisphereLight(0x6688cc, 0x223344, 0.6);
 scene.add(ambientLight);
-const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
-dirLight.position.set(5, 5, 5);
-scene.add(dirLight);"""
+const dirLight = new THREE.DirectionalLight(0xffeedd, 1.0);
+dirLight.position.set(5, 8, 5);
+dirLight.castShadow = true;
+dirLight.shadow.mapSize.set(1024, 1024);
+dirLight.shadow.camera.near = 0.5;
+dirLight.shadow.camera.far = 30;
+scene.add(dirLight);
+const rimLight = new THREE.PointLight(0x4488ff, 0.5, 15);
+rimLight.position.set(-4, 3, -4);
+scene.add(rimLight);"""
 
     lines = []
     for i, light in enumerate(lights_config["lights"]):
@@ -979,10 +1026,13 @@ scene.add(dirLight);"""
             lines.append(f"light{i}.position.set({position[0]}, {position[1]}, {position[2]});")
             lines.append(f"light{i}.angle = {light.get('angle', 0.5)};")
             lines.append(f"light{i}.penumbra = {light.get('penumbra', 0.5)};")
+            lines.append(f"light{i}.castShadow = true;")
             lines.append(f"scene.add(light{i});")
         else:
             lines.append(f"const light{i} = new THREE.DirectionalLight('{color}', {intensity});")
             lines.append(f"light{i}.position.set({position[0]}, {position[1]}, {position[2]});")
+            lines.append(f"light{i}.castShadow = true;")
+            lines.append(f"light{i}.shadow.mapSize.set(1024, 1024);")
             lines.append(f"scene.add(light{i});")
 
     return "\n".join(lines)
@@ -1018,8 +1068,8 @@ def _build_postprocessing_js(effects: list) -> tuple:
             bloom_intensity = params.get("strength", params.get("intensity", 0.4))
             setup_lines.append(f"// Bloom via emissive: intensity {bloom_intensity}")
         else:
-            param_str = json.dumps(params, indent=2)
-            setup_lines.append(f"// {eff_data['name']}: {eff_name} — parameters: {param_str}")
+            param_str = json.dumps(params)
+            setup_lines.append(f"// {eff_data['name']}: {eff_name} — {param_str}")
 
     if has_bloom:
         setup_lines.append(f"mesh.material.emissive = mesh.material.color.clone().multiplyScalar(0.3);")
