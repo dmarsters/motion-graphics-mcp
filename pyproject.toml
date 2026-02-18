@@ -8,15 +8,7 @@ version = "1.0.0"
 description = "Motion Graphics MCP - Comprehensive Three.js aesthetic enhancement with 100+ options"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = [
-    "fastmcp",
-    "pyyaml"
-]
-
-[project.optional-dependencies]
-dev = ["pytest"]
-
-
+dependencies = ["fastmcp>=0.1.0", "pyyaml>=6.0"]
 
 [project.entry-points."fastmcp.cloud"]
 motion-graphics-mcp = "server:mcp"
