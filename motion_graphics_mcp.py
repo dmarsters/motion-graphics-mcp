@@ -745,28 +745,20 @@ def generate_threejs_html(
   {(' · ' + ' + '.join(effects)) if effects else ''}
 </div>
 
-<script type="importmap">
-{{
-  "imports": {{
-    "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/r167/three.module.min.js"
-  }}
-}}
-</script>
-
-<script type="module">
-import * as THREE from 'three';
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 {postproc_imports}
 
+<script>
 // — Scene setup —
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('{background_color}');
 
-const camera = new THREE.PerspectiveCamera(50, {width}/{height}, 0.1, 100);
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
 camera.position.set(0, {camera_distance * 0.4:.1f}, {camera_distance:.1f});
 camera.lookAt(0, 0, 0);
 
 const renderer = new THREE.WebGLRenderer({{ antialias: true, alpha: false }});
-renderer.setSize({width}, {height});
+renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.2;
@@ -859,11 +851,11 @@ def _build_material_js(mat_type: str, params: dict, palette_colors: list) -> str
   color: new THREE.Color('{primary_color}'),
   metalness: {params.get('metalness', 0.0)},
   roughness: {params.get('roughness', 0.1)},
-  transmission: {params.get('transmission', 0.9)},
-  thickness: {params.get('thickness', 0.5)},
-  clearcoat: {params.get('clearcoat', 0.0)},
+  clearcoat: {params.get('clearcoat', 1.0)},
   clearcoatRoughness: {params.get('clearcoatRoughness', 0.1)},
-  ior: {params.get('ior', 1.5)},
+  reflectivity: {params.get('reflectivity', 0.9)},
+  transparent: {str(params.get('transmission', 0) > 0.1).lower()},
+  opacity: {max(0.15, 1.0 - params.get('transmission', 0.0))},
 }});""",
         "MeshNormalMaterial": lambda: "const material = new THREE.MeshNormalMaterial({ flatShading: false });",
         "MeshBasicMaterial": lambda: f"const material = new THREE.MeshBasicMaterial({{ color: new THREE.Color('{primary_color}') }});",
@@ -997,39 +989,45 @@ scene.add(dirLight);"""
 
 
 def _build_postprocessing_js(effects: list) -> tuple:
-    """Generate Three.js EffectComposer setup from effect taxonomy.
+    """Generate Three.js post-processing setup for CDN global pattern.
 
-    Returns (imports_js, setup_js, render_js) strings.
+    Returns (imports_html, setup_js, render_js) strings.
+    imports_html: Additional <script src> tags (placed before main script)
+    setup_js: JS code inside main script block
+    render_js: Render call inside animation loop
     """
     if not effects:
         return ("", "", "renderer.render(scene, camera);")
 
-    imports = [
-        "// Post-processing imports would go here in a bundled setup.",
-        "// For CDN usage, EffectComposer and passes need separate imports.",
-        "// Below is structured for module bundler or local three/addons.",
-    ]
+    # r128 CDN doesn't bundle EffectComposer — use emissive approximation
+    # for bloom and inline shader techniques for other effects.
+    imports_html = ""  # No additional script tags needed for approximations
 
     setup_lines = [
-        "// -- EffectComposer setup --",
-        "// const composer = new EffectComposer(renderer);",
-        "// const renderPass = new RenderPass(scene, camera);",
-        "// composer.addPass(renderPass);",
+        "// -- Post-processing (emissive approximation, no EffectComposer) --",
     ]
 
+    has_bloom = False
+    bloom_intensity = 0.4
+
     for eff_name, eff_data in effects:
-        pass_name = eff_data["threejs_pass"]
         params = eff_data["parameters"]
-        param_str = json.dumps(params, indent=2)
 
-        setup_lines.append(f"// -- {eff_data['name']} --")
-        setup_lines.append(f"// const {eff_name}Pass = new {pass_name}(/* {param_str} */);")
-        setup_lines.append(f"// composer.addPass({eff_name}Pass);")
+        if eff_name == "bloom":
+            has_bloom = True
+            bloom_intensity = params.get("strength", params.get("intensity", 0.4))
+            setup_lines.append(f"// Bloom via emissive: intensity {bloom_intensity}")
+        else:
+            param_str = json.dumps(params, indent=2)
+            setup_lines.append(f"// {eff_data['name']}: {eff_name} — parameters: {param_str}")
 
-    # Since CDN import of EffectComposer is complex, provide fallback
-    render_js = "renderer.render(scene, camera);\n  // For post-processing: composer.render();"
+    if has_bloom:
+        setup_lines.append(f"mesh.material.emissive = mesh.material.color.clone().multiplyScalar(0.3);")
+        setup_lines.append(f"mesh.material.emissiveIntensity = {bloom_intensity};")
 
-    return ("\n".join(imports), "\n".join(setup_lines), render_js)
+    render_js = "renderer.render(scene, camera);"
+
+    return (imports_html, "\n".join(setup_lines), render_js)
 
 
 # ========== ORBIT COMPOSER INTEGRATION ==========
