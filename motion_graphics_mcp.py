@@ -43,7 +43,11 @@ MATERIAL_SYSTEMS = load_olog("material_systems.yaml")
 MOTION_PATTERNS = load_olog("motion_patterns.yaml")
 COLORS_LIGHTING = load_olog("colors_lighting_composition.yaml")
 POST_PROCESSING = load_olog("post_processing.yaml")
+CAMERA_MOVEMENTS = load_olog("camera_movements.yaml")
 
+# Text primitives extension
+from text_primitives_ext import register_text_primitive_tools, TEXT_PRIMITIVES
+register_text_primitive_tools(mcp)
 
 # ========== LOOKUP HELPERS ==========
 
@@ -71,6 +75,12 @@ def find_motion(motion_name: str) -> Optional[Dict[str, Any]]:
 def find_effect(effect_name: str) -> Optional[Dict[str, Any]]:
     if effect_name in POST_PROCESSING and effect_name != "intentionality":
         return POST_PROCESSING[effect_name]
+    return None
+
+
+def find_camera(camera_name: str) -> Optional[Dict[str, Any]]:
+    if camera_name in CAMERA_MOVEMENTS and camera_name != "intentionality":
+        return CAMERA_MOVEMENTS[camera_name]
     return None
 
 
@@ -197,6 +207,66 @@ def list_post_processing_effects() -> str:
                           f"driven by {affinity.get('driven_by', '?')}")
         result.append("")
     return "\n".join(result)
+
+
+@mcp.tool()
+def list_camera_movements() -> str:
+    """List all available camera movement patterns.
+
+    Returns formatted overview of CAMERA options — the narrative dimension
+    describing the viewer's emotional relationship to the scene.
+
+    Independent from ACTION (object motion). These compose:
+    a pulsing object + dolly_in ≠ pulsing object + crane_up.
+
+    Each movement includes orbit_affinity for phase-driven selection.
+    """
+    result = ["# Available Camera Movements\n"]
+    for cam_name, cam_data in CAMERA_MOVEMENTS.items():
+        if cam_name == "intentionality":
+            continue
+        affinity = cam_data.get("orbit_affinity", {})
+        result.append(f"\n**{cam_name}**: {cam_data['name']}")
+        result.append(f"  - {cam_data['description']}")
+        result.append(f"  - Character: {cam_data['visual_character']}")
+        result.append(f"  - Mood: {', '.join(cam_data.get('narrative_mood', []))}")
+        result.append(f"  - Type: {cam_data['animation_type']}")
+        if affinity:
+            result.append(f"  - Orbit affinity: peaks at {affinity.get('peaks_at', '?')}, "
+                          f"driven by {affinity.get('driven_by', '?')}")
+        result.append("")
+    return "\n".join(result)
+
+
+@mcp.tool()
+def get_camera_parameters(camera_name: str) -> str:
+    """Get complete parameters for a camera movement.
+
+    Layer 2 deterministic lookup — maps camera name to animation
+    configuration and narrative metadata.
+
+    Args:
+        camera_name: Name of camera movement (e.g., "dolly_in", "flythrough", "orbit")
+
+    Returns:
+        Complete camera specification including parameters, narrative mood,
+        and orbit affinity.
+    """
+    cam = find_camera(camera_name)
+    if not cam:
+        available = [k for k in CAMERA_MOVEMENTS.keys() if k != "intentionality"]
+        return f"Error: Camera movement '{camera_name}' not found. Available: {available}"
+    result = {
+        "camera_movement": camera_name,
+        "name": cam["name"],
+        "description": cam["description"],
+        "animation_type": cam["animation_type"],
+        "parameters": cam["parameters"],
+        "narrative_mood": cam.get("narrative_mood", []),
+        "visual_character": cam["visual_character"],
+        "orbit_affinity": cam.get("orbit_affinity", {}),
+    }
+    return json.dumps(result, indent=2)
 
 
 # ========== LAYER 2 TOOLS — Deterministic Mapping ==========
@@ -655,6 +725,11 @@ def generate_threejs_html(
     camera_distance: float = 5.0,
     animation_duration: float = 4.0,
     background_color: str = "#0a0a0a",
+    background_type: str = "color",
+    background_image_url: str = "",
+    background_blur: float = 0.0,
+    background_opacity: float = 1.0,
+    camera_motion: str = "orbit",
     resolution: str = "1080p",
     autoplay: bool = True
 ) -> str:
@@ -673,7 +748,17 @@ def generate_threejs_html(
         lighting: Lighting mood name
         camera_distance: Camera distance from origin
         animation_duration: Loop duration in seconds
-        background_color: CSS hex color for background
+        background_color: CSS hex color (used for "color" type, fallback for others)
+        background_type: Background rendering mode:
+            "color" — solid CSS color (default, opaque canvas)
+            "transparent" — alpha channel compositing (for layering over other content)
+            "image" — background_image_url loaded as textured back-plane
+        background_image_url: URL for background image (only used when background_type="image")
+        background_blur: Blur amount for background image, 0.0-1.0 (0=sharp, 1=heavy blur)
+        background_opacity: Background image opacity, 0.0-1.0
+        camera_motion: Camera movement pattern from taxonomy (e.g., "orbit",
+            "dolly_in", "flythrough", "crane_up", "whip_pan", "static",
+            "vertigo", "breathing"). Independent from object motion (ACTION).
         resolution: "720p", "1080p", or "4k"
         autoplay: Start animation immediately
 
@@ -714,16 +799,68 @@ def generate_threejs_html(
     # Build lights JS
     lights_js = _build_lights_js(lights_config)
 
-    # Build post-processing JS
+    # Build camera JS
+    cam_data = find_camera(camera_motion)
+    camera_js = _build_camera_js(cam_data, animation_duration)
+
+    # Build post-processing JS (transparent mode gets alpha-preserving bloom shader)
     effects_data = []
     for eff_name in effects:
         eff = find_effect(eff_name)
         if eff:
             effects_data.append((eff_name, eff))
-    postproc_imports, postproc_setup, postproc_render = _build_postprocessing_js(effects_data)
+    is_transparent = background_type == "transparent"
+    postproc_imports, postproc_setup, postproc_render = _build_postprocessing_js(
+        effects_data, transparent=is_transparent)
 
     # Determine if material needs envmap (metallic or physical with reflectivity)
     needs_envmap = mat_type in ("MeshStandardMaterial", "MeshPhysicalMaterial")
+
+    # Background-dependent configuration
+    is_image_bg = background_type == "image" and background_image_url
+
+    # --- CSS body ---
+    if is_transparent:
+        body_css = "background: transparent;"
+    else:
+        body_css = f"background: {background_color};"
+
+    # --- Renderer options ---
+    if is_transparent:
+        renderer_js = """const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, premultipliedAlpha: false });"""
+        renderer_clear_js = "renderer.setClearColor(0x000000, 0);"
+    else:
+        renderer_js = "const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });"
+        renderer_clear_js = ""
+
+    # --- Scene background ---
+    if is_transparent:
+        scene_bg_js = "// scene.background omitted — transparent compositing mode"
+    elif is_image_bg:
+        scene_bg_js = "// scene.background set by image loader below"
+    else:
+        scene_bg_js = f"scene.background = new THREE.Color('{background_color}');"
+
+    # --- Ground plane (skip for transparent — fills alpha channel) ---
+    if is_transparent:
+        ground_js = "// Ground plane omitted — transparent compositing mode"
+    else:
+        ground_js = f"""const groundGeo = new THREE.PlaneGeometry(40, 40);
+const groundMat = new THREE.MeshStandardMaterial({{
+  color: new THREE.Color('{background_color}').multiplyScalar(0.85),
+  metalness: 0.1,
+  roughness: 0.85,
+}});
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -1.8;
+ground.receiveShadow = true;
+scene.add(ground);"""
+
+    # --- Background image loader ---
+    background_loader_js = _build_background_js(
+        background_type, background_color, background_image_url,
+        background_blur, background_opacity)
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -733,7 +870,7 @@ def generate_threejs_html(
 <title>Motion Graphics — {primitive} + {material} + {motion}</title>
 <style>
   * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-  body {{ background: {background_color}; overflow: hidden; }}
+  body {{ {body_css} overflow: hidden; }}
   canvas {{ display: block; width: 100%; height: 100vh; }}
 </style>
 </head>
@@ -745,14 +882,14 @@ def generate_threejs_html(
 <script>
 // — Scene setup —
 const scene = new THREE.Scene();
-scene.background = new THREE.Color('{background_color}');
+{scene_bg_js}
 
 const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
 const camDist = {camera_distance:.1f};
 camera.position.set(0, camDist * 0.35, camDist);
 camera.lookAt(0, 0, 0);
 
-const renderer = new THREE.WebGLRenderer({{ antialias: true, alpha: false }});
+{renderer_js}
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -760,7 +897,10 @@ renderer.toneMappingExposure = 1.2;
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+{renderer_clear_js}
 document.body.appendChild(renderer.domElement);
+
+{background_loader_js}
 
 {'// — Procedural environment map for reflections —' if needs_envmap else ''}
 {_build_envmap_js() if needs_envmap else ''}
@@ -775,18 +915,8 @@ const mesh = new THREE.Mesh(geometry, material);
 mesh.castShadow = true;
 scene.add(mesh);
 
-// — Ground plane (subtle reflective floor) —
-const groundGeo = new THREE.PlaneGeometry(40, 40);
-const groundMat = new THREE.MeshStandardMaterial({{
-  color: new THREE.Color('{background_color}').multiplyScalar(0.85),
-  metalness: 0.1,
-  roughness: 0.85,
-}});
-const ground = new THREE.Mesh(groundGeo, groundMat);
-ground.rotation.x = -Math.PI / 2;
-ground.position.y = -1.8;
-ground.receiveShadow = true;
-scene.add(ground);
+// — Ground plane —
+{ground_js}
 
 // — Lighting —
 {lights_js}
@@ -804,12 +934,8 @@ function animate() {{
   const elapsed = clock.getElapsedTime();
   const t = (elapsed % duration) / duration;
 
-  // Camera auto-orbit
-  const camAngle = elapsed * 0.15;
-  camera.position.x = camDist * Math.sin(camAngle);
-  camera.position.z = camDist * Math.cos(camAngle);
-  camera.position.y = camDist * 0.35 + Math.sin(elapsed * 0.2) * 0.3;
-  camera.lookAt(0, 0, 0);
+  // Camera motion
+{camera_js}
 
   // Object motion
 {motion_js}
@@ -850,6 +976,289 @@ envScene.add(envFillLight);
 const envRT = pmremGenerator.fromScene(envScene, 0.04);
 scene.environment = envRT.texture;
 pmremGenerator.dispose();"""
+
+
+def _build_background_js(bg_type: str, bg_color: str, bg_image_url: str,
+                          bg_blur: float, bg_opacity: float) -> str:
+    """Generate background setup JS based on background_type.
+
+    Three modes:
+      color:       Handled by scene.background in template — nothing extra needed.
+      transparent: Handled by renderer alpha config — nothing extra needed.
+      image:       Loads image onto a textured back-plane behind the scene.
+                   Back-plane approach (vs scene.background) gives control over
+                   blur, opacity, and parallax that scene.background doesn't.
+    """
+    if bg_type in ("color", "transparent"):
+        return ""
+
+    if bg_type == "image" and bg_image_url:
+        return f"""// — Background image (back-plane for blur/opacity control) —
+const _bgLoader = new THREE.TextureLoader();
+_bgLoader.load('{bg_image_url}', function(_bgTex) {{
+  _bgTex.encoding = THREE.sRGBEncoding;
+  _bgTex.minFilter = THREE.LinearMipmapLinearFilter;
+  _bgTex.generateMipmaps = true;
+
+  const _bgGeo = new THREE.PlaneGeometry(80, 45);  // 16:9 aspect
+  const _bgMat = new THREE.MeshBasicMaterial({{
+    map: _bgTex,
+    transparent: {str(bg_opacity < 1.0).lower()},
+    opacity: {bg_opacity:.2f},
+    depthWrite: false,
+  }});
+  const _bgMesh = new THREE.Mesh(_bgGeo, _bgMat);
+  _bgMesh.position.z = -20;
+  _bgMesh.renderOrder = -1;
+  scene.add(_bgMesh);
+}}, undefined, function(_err) {{
+  console.warn('Background image failed to load:', _err);
+  scene.background = new THREE.Color('{bg_color}');
+}});"""
+
+    return ""
+
+
+def _build_camera_js(camera_movement: dict, duration: float) -> str:
+    """Generate camera animation JS from taxonomy.
+
+    Replaces the hardcoded orbit block in the animation loop.
+    Each animation_type maps to a distinct camera behavior.
+
+    The camera code runs inside the animate() loop with access to:
+      elapsed  — total seconds since start
+      t        — normalized loop position [0,1]
+      camDist  — base camera distance
+      duration — loop duration in seconds
+      camera   — THREE.PerspectiveCamera
+
+    Returns JS code for the camera section of the animation loop.
+    """
+    if not camera_movement:
+        return _camera_orbit({"speed": 0.15, "height_oscillation": 0.3, "height_base": 0.35})
+
+    anim_type = camera_movement.get("animation_type", "orbit")
+    params = camera_movement.get("parameters", {})
+
+    dispatch = {
+        "none": lambda: _camera_static(),
+        "orbit": lambda: _camera_orbit(params),
+        "distance_lerp": lambda: _camera_dolly(params, duration),
+        "vertical_arc": lambda: _camera_crane(params, duration),
+        "bezier_path": lambda: _camera_flythrough(params, duration),
+        "rotation_snap": lambda: _camera_whip_pan(params),
+        "roll": lambda: _camera_barrel_roll(params),
+        "vertigo": lambda: _camera_vertigo(params, duration),
+        "arc_path": lambda: _camera_arc(params, duration),
+        "distance_oscillate": lambda: _camera_breathing(params),
+    }
+
+    builder = dispatch.get(anim_type, lambda: _camera_orbit(params))
+    return builder()
+
+
+def _camera_static() -> str:
+    return "  // Camera: static (locked off)"
+
+
+def _camera_orbit(params: dict) -> str:
+    speed = params.get("speed", 0.15)
+    h_osc = params.get("height_oscillation", 0.3)
+    h_base = params.get("height_base", 0.35)
+    r_mult = params.get("radius_multiplier", 1.0)
+    return f"""  // Camera: orbit
+  const _camAngle = elapsed * {speed};
+  const _camR = camDist * {r_mult};
+  camera.position.x = _camR * Math.sin(_camAngle);
+  camera.position.z = _camR * Math.cos(_camAngle);
+  camera.position.y = camDist * {h_base} + Math.sin(elapsed * 0.2) * {h_osc};
+  camera.lookAt(0, 0, 0);"""
+
+
+def _camera_dolly(params: dict, duration: float) -> str:
+    start_mult = params.get("start_distance_multiplier", 2.5)
+    end_mult = params.get("end_distance_multiplier", 0.4)
+    easing = params.get("easing", "ease_in_out")
+    orbit_during = params.get("orbit_during", True)
+    orbit_speed = params.get("orbit_speed", 0.08)
+    h_drift = params.get("height_drift", 0.0)
+
+    ease_fn = _ease_function(easing)
+    lines = [
+        f"  // Camera: dolly ({start_mult}x → {end_mult}x)",
+        f"  const _dollyT = {ease_fn};",
+        f"  const _dollyDist = camDist * ({start_mult} + ({end_mult} - {start_mult}) * _dollyT);",
+    ]
+    if orbit_during:
+        lines.append(f"  const _dollyAngle = elapsed * {orbit_speed};")
+        lines.append(f"  camera.position.x = _dollyDist * Math.sin(_dollyAngle);")
+        lines.append(f"  camera.position.z = _dollyDist * Math.cos(_dollyAngle);")
+    else:
+        lines.append(f"  camera.position.x = 0;")
+        lines.append(f"  camera.position.z = _dollyDist;")
+    lines.append(f"  camera.position.y = camDist * 0.35 + _dollyT * camDist * {h_drift};")
+    lines.append(f"  camera.lookAt(0, 0, 0);")
+    return "\n".join(lines)
+
+
+def _camera_crane(params: dict, duration: float) -> str:
+    start_h = params.get("start_height_offset", -1.0)
+    end_h = params.get("end_height_offset", 2.5)
+    tilt_follow = params.get("tilt_follow", True)
+    orbit_during = params.get("orbit_during", True)
+    orbit_speed = params.get("orbit_speed", 0.06)
+    easing = params.get("easing", "ease_out")
+
+    ease_fn = _ease_function(easing)
+    lines = [
+        f"  // Camera: crane ({start_h} → {end_h})",
+        f"  const _craneT = {ease_fn};",
+        f"  const _craneH = {start_h} + ({end_h} - ({start_h})) * _craneT;",
+    ]
+    if orbit_during:
+        lines.append(f"  const _craneAngle = elapsed * {orbit_speed};")
+        lines.append(f"  camera.position.x = camDist * Math.sin(_craneAngle);")
+        lines.append(f"  camera.position.z = camDist * Math.cos(_craneAngle);")
+    else:
+        lines.append(f"  camera.position.x = 0;")
+        lines.append(f"  camera.position.z = camDist;")
+    lines.append(f"  camera.position.y = camDist * 0.35 + _craneH;")
+    lines.append(f"  camera.lookAt(0, {('0' if tilt_follow else 'camera.position.y')}, 0);")
+    return "\n".join(lines)
+
+
+def _camera_flythrough(params: dict, duration: float) -> str:
+    start_mult = params.get("start_distance_multiplier", 3.0)
+    closest = params.get("closest_approach", 0.15)
+    end_mult = params.get("end_distance_multiplier", 3.0)
+    curvature = params.get("path_curvature", 0.6)
+    h_var = params.get("height_variation", 0.8)
+    easing = params.get("speed_profile", "ease_in_out")
+
+    ease_fn = _ease_function(easing)
+    return f"""  // Camera: flythrough (bezier path)
+  const _ftT = {ease_fn};
+  const _ftOneMinusT = 1.0 - _ftT;
+  const _p0z = camDist * {start_mult};
+  const _p1z = camDist * {closest};
+  const _p2z = -camDist * {end_mult};
+  const _p1x = camDist * {curvature};
+  camera.position.z = _ftOneMinusT * _ftOneMinusT * _p0z + 2 * _ftOneMinusT * _ftT * _p1z + _ftT * _ftT * _p2z;
+  camera.position.x = 2 * _ftOneMinusT * _ftT * _p1x;
+  camera.position.y = camDist * 0.35 + Math.sin(_ftT * Math.PI) * camDist * {h_var};
+  camera.lookAt(0, 0, 0);"""
+
+
+def _camera_whip_pan(params: dict) -> str:
+    snap_angle = params.get("snap_angle", 90)
+    snap_dur = params.get("snap_duration", 0.3)
+    hold_dur = params.get("hold_duration", 2.0)
+    h_base = params.get("height_base", 0.35)
+    cycle = snap_dur + hold_dur
+    snap_rad = math.radians(snap_angle)
+
+    return f"""  // Camera: whip pan ({snap_angle}° snaps)
+  const _wpCycle = {cycle};
+  const _wpPhase = (elapsed % _wpCycle) / _wpCycle;
+  const _wpSnapFrac = {snap_dur} / _wpCycle;
+  const _wpSegment = Math.floor(elapsed / _wpCycle);
+  let _wpAngle;
+  if (_wpPhase < _wpSnapFrac) {{
+    const _wpSnapT = _wpPhase / _wpSnapFrac;
+    const _wpEased = 1.0 - Math.pow(1.0 - _wpSnapT, 3.0);
+    _wpAngle = (_wpSegment + _wpEased) * {snap_rad};
+  }} else {{
+    _wpAngle = (_wpSegment + 1.0) * {snap_rad};
+  }}
+  camera.position.x = camDist * Math.sin(_wpAngle);
+  camera.position.z = camDist * Math.cos(_wpAngle);
+  camera.position.y = camDist * {h_base};
+  camera.lookAt(0, 0, 0);"""
+
+
+def _camera_barrel_roll(params: dict) -> str:
+    roll_speed = params.get("roll_speed", 0.3)
+    orbit_during = params.get("orbit_during", True)
+    orbit_speed = params.get("orbit_speed", 0.08)
+    roll_amp = params.get("roll_amplitude", 1.0)
+
+    lines = [f"  // Camera: barrel roll"]
+    if orbit_during:
+        lines.append(f"  const _brAngle = elapsed * {orbit_speed};")
+        lines.append(f"  camera.position.x = camDist * Math.sin(_brAngle);")
+        lines.append(f"  camera.position.z = camDist * Math.cos(_brAngle);")
+        lines.append(f"  camera.position.y = camDist * 0.35;")
+    else:
+        lines.append(f"  camera.position.set(0, camDist * 0.35, camDist);")
+    lines.append(f"  camera.lookAt(0, 0, 0);")
+    lines.append(f"  camera.rotation.z = elapsed * {roll_speed} * Math.PI * 2 * {roll_amp};")
+    return "\n".join(lines)
+
+
+def _camera_vertigo(params: dict, duration: float) -> str:
+    start_mult = params.get("start_distance_multiplier", 1.5)
+    end_mult = params.get("end_distance_multiplier", 0.5)
+    start_fov = params.get("start_fov", 30)
+    end_fov = params.get("end_fov", 80)
+    easing = params.get("easing", "ease_in_out")
+
+    ease_fn = _ease_function(easing)
+    return f"""  // Camera: vertigo (dolly zoom)
+  const _vzT = {ease_fn};
+  const _vzDist = camDist * ({start_mult} + ({end_mult} - {start_mult}) * _vzT);
+  const _vzFov = {start_fov} + ({end_fov} - {start_fov}) * _vzT;
+  camera.fov = _vzFov;
+  camera.updateProjectionMatrix();
+  camera.position.set(0, camDist * 0.35, _vzDist);
+  camera.lookAt(0, 0, 0);"""
+
+
+def _camera_arc(params: dict, duration: float) -> str:
+    start_pos = params.get("start_position", [-2.0, -0.5, 2.0])
+    end_pos = params.get("end_position", [0.5, 1.5, 0.8])
+    easing = params.get("easing", "ease_out")
+    look_offset = params.get("look_at_offset", [0, 0, 0])
+
+    ease_fn = _ease_function(easing)
+    return f"""  // Camera: arc path
+  const _arcT = {ease_fn};
+  camera.position.x = camDist * ({start_pos[0]} + ({end_pos[0]} - ({start_pos[0]})) * _arcT);
+  camera.position.y = camDist * ({start_pos[1]} + ({end_pos[1]} - ({start_pos[1]})) * _arcT);
+  camera.position.z = camDist * ({start_pos[2]} + ({end_pos[2]} - ({start_pos[2]})) * _arcT);
+  camera.lookAt({look_offset[0]}, {look_offset[1]}, {look_offset[2]});"""
+
+
+def _camera_breathing(params: dict) -> str:
+    osc_amp = params.get("oscillation_amplitude", 0.15)
+    osc_speed = params.get("oscillation_speed", 0.4)
+    h_osc = params.get("height_oscillation", 0.08)
+    orbit_during = params.get("orbit_during", True)
+    orbit_speed = params.get("orbit_speed", 0.04)
+
+    lines = [f"  // Camera: breathing"]
+    lines.append(f"  const _brthDist = camDist * (1.0 + Math.sin(elapsed * {osc_speed} * Math.PI * 2) * {osc_amp});")
+    if orbit_during:
+        lines.append(f"  const _brthAngle = elapsed * {orbit_speed};")
+        lines.append(f"  camera.position.x = _brthDist * Math.sin(_brthAngle);")
+        lines.append(f"  camera.position.z = _brthDist * Math.cos(_brthAngle);")
+    else:
+        lines.append(f"  camera.position.x = 0;")
+        lines.append(f"  camera.position.z = _brthDist;")
+    lines.append(f"  camera.position.y = camDist * 0.35 + Math.sin(elapsed * {osc_speed} * Math.PI * 2 + 0.5) * camDist * {h_osc};")
+    lines.append(f"  camera.lookAt(0, 0, 0);")
+    return "\n".join(lines)
+
+
+def _ease_function(easing: str) -> str:
+    """Return JS expression for easing applied to t (normalized loop position)."""
+    ease_map = {
+        "ease_in": "t * t",
+        "ease_out": "(1.0 - (1.0 - t) * (1.0 - t))",
+        "ease_in_out": "(t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2)",
+        "linear": "t",
+    }
+    return ease_map.get(easing, ease_map["ease_in_out"])
+
 
 def _build_geometry_js(geom_type: str, params: dict) -> str:
     """Generate Three.js geometry constructor from taxonomy."""
@@ -1038,42 +1447,182 @@ scene.add(rimLight);"""
     return "\n".join(lines)
 
 
-def _build_postprocessing_js(effects: list) -> tuple:
-    """Generate Three.js post-processing setup for CDN global pattern.
+def _build_postprocessing_js(effects: list, transparent: bool = False) -> tuple:
+    """Generate Three.js post-processing setup.
 
     Returns (imports_html, setup_js, render_js) strings.
-    imports_html: Additional <script src> tags (placed before main script)
-    setup_js: JS code inside main script block
-    render_js: Render call inside animation loop
+
+    When transparent=False (default): Uses emissive approximation for bloom
+    and inline comments for other effects. Simple, zero-dependency.
+
+    When transparent=True: Generates a real render-target + shader pipeline
+    with alpha-preserving bloom. The bloom glow must carry alpha so it
+    composites correctly over other layers — otherwise you get hard-edged
+    sprites with no soft halo when layered.
+
+    The alpha-preserving bloom works by:
+    1. Rendering scene to an RGBA WebGLRenderTarget
+    2. Running a Gaussian blur to extract bright regions
+    3. Compositing bloom RGB additively while deriving output alpha from
+       both the original particle alpha AND the bloom brightness, so the
+       glow halo extends into neighboring transparent pixels.
     """
-    if not effects:
+    if not effects and not transparent:
         return ("", "", "renderer.render(scene, camera);")
 
-    # r128 CDN doesn't bundle EffectComposer — use emissive approximation
-    # for bloom and inline shader techniques for other effects.
-    imports_html = ""  # No additional script tags needed for approximations
+    if not effects and transparent:
+        # Transparent but no effects — just render with clear alpha
+        return ("", "", """renderer.setClearColor(0x000000, 0);
+  renderer.clear();
+  renderer.render(scene, camera);""")
 
+    imports_html = ""
+
+    # Detect which effects are requested
+    has_bloom = False
+    bloom_strength = 0.4
+    other_effects = []
+
+    for eff_name, eff_data in effects:
+        params = eff_data["parameters"]
+        if eff_name == "bloom":
+            has_bloom = True
+            bloom_strength = params.get("strength", params.get("intensity", 0.4))
+        else:
+            other_effects.append((eff_name, eff_data))
+
+    # --- TRANSPARENT MODE: real shader pipeline ---
+    if transparent and has_bloom:
+        setup_lines = [
+            "// — Alpha-preserving bloom (render-target + shader) —",
+            f"const _bloomStrength = {bloom_strength};",
+            "",
+            "const _rtOpts = {",
+            "  format: THREE.RGBAFormat,",
+            "  type: THREE.UnsignedByteType,",
+            "  stencilBuffer: false,",
+            "  depthBuffer: true,",
+            "};",
+            "const _bloomRT = new THREE.WebGLRenderTarget(",
+            "  window.innerWidth, window.innerHeight, _rtOpts);",
+            "",
+            "// Bloom shader: Gaussian blur extracts bright regions,",
+            "// output alpha derived from particle alpha + bloom luminance.",
+            "const _bloomMat = new THREE.ShaderMaterial({",
+            "  uniforms: {",
+            "    tDiffuse: { value: null },",
+            "    bloomStrength: { value: _bloomStrength },",
+            "    resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },",
+            "  },",
+            "  vertexShader: `",
+            "    varying vec2 vUv;",
+            "    void main() {",
+            "      vUv = uv;",
+            "      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);",
+            "    }",
+            "  `,",
+            "  fragmentShader: `",
+            "    uniform sampler2D tDiffuse;",
+            "    uniform float bloomStrength;",
+            "    uniform vec2 resolution;",
+            "    varying vec2 vUv;",
+            "",
+            "    void main() {",
+            "      vec4 center = texture2D(tDiffuse, vUv);",
+            "      vec2 texel = 1.0 / resolution;",
+            "",
+            "      // 7x7 Gaussian for bloom halo",
+            "      vec4 bloom = vec4(0.0);",
+            "      float total = 0.0;",
+            "      for (float x = -3.0; x <= 3.0; x += 1.0) {",
+            "        for (float y = -3.0; y <= 3.0; y += 1.0) {",
+            "          float w = exp(-(x*x + y*y) / 8.0);",
+            "          bloom += texture2D(tDiffuse, vUv + vec2(x, y) * texel * 3.0) * w;",
+            "          total += w;",
+            "        }",
+            "      }",
+            "      bloom /= total;",
+            "",
+            "      // Threshold bright pixels",
+            "      vec3 bright = max(bloom.rgb - vec3(0.3), vec3(0.0));",
+            "",
+            "      // RGB: original + bloom glow",
+            "      vec3 finalRGB = center.rgb + bright * bloomStrength * 1.5;",
+            "",
+            "      // Alpha: particle alpha + bloom spread alpha",
+            "      // Without bloom alpha, glow gets clipped to hard sprite edges",
+            "      float bloomAlpha = max(max(bright.r, bright.g), bright.b) * bloomStrength * 2.0;",
+            "      float finalAlpha = min(center.a + bloomAlpha, 1.0);",
+            "",
+            "      gl_FragColor = vec4(finalRGB, finalAlpha);",
+            "    }",
+            "  `,",
+            "  transparent: true,",
+            "});",
+            "",
+            "const _postScene = new THREE.Scene();",
+            "const _postCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);",
+            "_postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), _bloomMat));",
+        ]
+
+        # Also handle other effects as comments (same as opaque mode)
+        for eff_name, eff_data in other_effects:
+            param_str = json.dumps(eff_data["parameters"])
+            setup_lines.append(f"// {eff_data['name']}: {eff_name} — {param_str}")
+
+        # Resize handler for render target
+        setup_lines.append("")
+        setup_lines.append("window.addEventListener('resize', () => {")
+        setup_lines.append("  _bloomRT.setSize(window.innerWidth, window.innerHeight);")
+        setup_lines.append("  _bloomMat.uniforms.resolution.value.set(window.innerWidth, window.innerHeight);")
+        setup_lines.append("});")
+
+        render_js = """// Render to offscreen target (preserves alpha)
+  renderer.setRenderTarget(_bloomRT);
+  renderer.setClearColor(0x000000, 0);
+  renderer.clear();
+  renderer.render(scene, camera);
+  renderer.setRenderTarget(null);
+
+  // Post-process with alpha-preserving bloom
+  renderer.setClearColor(0x000000, 0);
+  renderer.clear();
+  _bloomMat.uniforms.tDiffuse.value = _bloomRT.texture;
+  renderer.render(_postScene, _postCamera);"""
+
+        return (imports_html, "\n".join(setup_lines), render_js)
+
+    # --- TRANSPARENT MODE without bloom: just render with alpha ---
+    if transparent:
+        setup_lines = [
+            "// -- Post-processing (transparent, no bloom) --",
+        ]
+        for eff_name, eff_data in effects:
+            param_str = json.dumps(eff_data["parameters"])
+            setup_lines.append(f"// {eff_data['name']}: {eff_name} — {param_str}")
+
+        render_js = """renderer.setClearColor(0x000000, 0);
+  renderer.clear();
+  renderer.render(scene, camera);"""
+
+        return (imports_html, "\n".join(setup_lines), render_js)
+
+    # --- OPAQUE MODE (original behavior): emissive approximation ---
     setup_lines = [
         "// -- Post-processing (emissive approximation, no EffectComposer) --",
     ]
 
-    has_bloom = False
-    bloom_intensity = 0.4
-
     for eff_name, eff_data in effects:
         params = eff_data["parameters"]
-
         if eff_name == "bloom":
-            has_bloom = True
-            bloom_intensity = params.get("strength", params.get("intensity", 0.4))
-            setup_lines.append(f"// Bloom via emissive: intensity {bloom_intensity}")
+            setup_lines.append(f"// Bloom via emissive: intensity {bloom_strength}")
         else:
             param_str = json.dumps(params)
             setup_lines.append(f"// {eff_data['name']}: {eff_name} — {param_str}")
 
     if has_bloom:
         setup_lines.append(f"mesh.material.emissive = mesh.material.color.clone().multiplyScalar(0.3);")
-        setup_lines.append(f"mesh.material.emissiveIntensity = {bloom_intensity};")
+        setup_lines.append(f"mesh.material.emissiveIntensity = {bloom_strength};")
 
     render_js = "renderer.render(scene, camera);"
 
@@ -1495,7 +2044,7 @@ mirror, orbit relationships and staggered animation timing.
 **Savings: 60-80% token reduction vs pure LLM**
 
 ## Version
-2.0.0 — Extended with code gen, post-processing, scene graph, orbit integration
+2.2.0 — Added camera movements (O×L×A×E×C), background modes, alpha-preserving bloom
 """
 
 

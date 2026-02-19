@@ -14,4 +14,3 @@ motion-graphics-mcp = "motion_graphics_mcp:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["."]
-
