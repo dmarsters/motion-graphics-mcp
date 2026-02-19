@@ -1,0 +1,1185 @@
+# =============================================================================
+# Text Primitives Olog — Semantic Motion Graphics Taxonomy
+# =============================================================================
+#
+# Extension to Motion Graphics MCP: OBJECT dimension
+#
+# Key insight: Emoji are PRE-COMPOSED MORPHISMS. Unlike geometric primitives
+# which acquire meaning through LOOK + ACTION + EFFECT, emoji arrive with
+# semantic content that implies defaults across ALL four OLAE dimensions.
+#
+# The semantic_profile on each glyph is a complete default OLAE specification.
+# Users override selectively — the inference engine fills everything else.
+#
+# Rendering modes:
+#   billboard    — CanvasTexture on PlaneGeometry, always faces camera
+#   extruded     — 3D letterform with depth, full material/lighting interaction
+#   sdf          — Signed Distance Field, resolution-independent at any scale
+#   particle     — Instanced billboards for swarm/field compositions
+#
+# Compositional roles:
+#   anchor       — Scene center of gravity, others orbit/reference it
+#   satellite    — Orbits or references an anchor
+#   particle     — Swarm member, instanced, staggered timing
+#   background   — Ambient fill, slow drift, low opacity
+#   trigger      — Event-driven appearance (flash, snap, burst)
+#
+# Physics models:
+#   rigid        — Solid body, clean rotation/translation
+#   fluid        — Wave propagation, flow fields
+#   particle     — Emission, drift, fade lifecycle
+#   elastic      — Snap, bounce, spring dynamics
+#   growth       — Scale emergence, unfold, bloom
+#   orbital      — Keplerian motion, gravity wells
+#
+# =============================================================================
+
+intentionality: >
+  Text primitives extend the OBJECT dimension with semantically pre-loaded
+  forms. Where geometric primitives are meaning-neutral vessels shaped by
+  LOOK + ACTION + EFFECT, text primitives carry inherent semantic content
+  that implies natural defaults across all four OLAE dimensions. The
+  semantic inference layer is a Layer 2 deterministic system: given a glyph,
+  it returns a complete default OLAE configuration with zero LLM cost.
+  Users override selectively — the system fills gaps with semantically
+  coherent defaults. This inverts the usual composition direction: instead
+  of building meaning additively, you modulate meaning that already exists.
+
+
+# =============================================================================
+# RENDERING CONFIGURATION
+# =============================================================================
+
+render_modes:
+  billboard:
+    name: "Billboard Sprite"
+    description: "Emoji rendered to CanvasTexture on PlaneGeometry, always faces camera"
+    threejs_geometry: "PlaneGeometry"
+    texture_source: "canvas_2d"
+    parameters:
+      canvas_resolution: 512
+      font_size_ratio: 0.78      # fraction of canvas size
+      font_family: "serif"       # best emoji rendering cross-platform
+      transparent: true
+      alpha_test: 0.01
+    face_camera: true
+    supports_instancing: true
+    material_interaction: "limited"  # color tint only, no metalness/roughness
+    complexity: "low"
+    use_cases:
+      - "particle swarms"
+      - "rapid prototyping"
+      - "always-readable icons"
+      - "HUD / overlay elements"
+
+  extruded:
+    name: "Extruded Glyph"
+    description: "3D letterform with depth — full material and lighting interaction"
+    threejs_geometry: "ExtrudeGeometry"
+    texture_source: "shape_path"
+    parameters:
+      depth: 0.3
+      bevel_enabled: true
+      bevel_thickness: 0.02
+      bevel_size: 0.015
+      bevel_segments: 4
+      curve_segments: 24
+    face_camera: false
+    supports_instancing: false
+    material_interaction: "full"    # metalness, roughness, clearcoat all apply
+    complexity: "high"
+    use_cases:
+      - "hero text / titles"
+      - "architectural typography"
+      - "material showcase"
+      - "physical interaction scenes"
+
+  sdf:
+    name: "SDF Text"
+    description: "Signed Distance Field rendering — crisp at any scale"
+    threejs_geometry: "PlaneGeometry"
+    texture_source: "sdf_texture"
+    parameters:
+      sdf_resolution: 256
+      padding: 0.25
+      smoothing: 0.1
+      outline_width: 0.0
+      outline_color: "#000000"
+    face_camera: true
+    supports_instancing: true
+    material_interaction: "shader"  # custom SDF shader, color + outline
+    complexity: "medium"
+    use_cases:
+      - "text at variable distances"
+      - "zoom transitions"
+      - "clean UI elements"
+      - "resolution-independent labels"
+
+  particle:
+    name: "Instanced Particle"
+    description: "InstancedMesh of billboard glyphs for swarm compositions"
+    threejs_geometry: "PlaneGeometry"
+    texture_source: "canvas_2d"
+    parameters:
+      canvas_resolution: 256       # lower res OK for small instances
+      max_instances: 500
+      instance_scale_variance: 0.3
+      instance_opacity_variance: 0.2
+    face_camera: true
+    supports_instancing: true
+    material_interaction: "limited"
+    complexity: "medium"
+    use_cases:
+      - "snow, rain, confetti"
+      - "emoji storms"
+      - "field visualizations"
+      - "ambient atmosphere"
+
+
+# =============================================================================
+# SEMANTIC GLYPH CATEGORIES
+# =============================================================================
+#
+# Each category groups glyphs sharing physics models and compositional behavior.
+# Individual glyph entries override category defaults where needed.
+#
+
+natural_phenomena:
+  fire:
+    glyph: "🔥"
+    name: "Fire"
+    description: "Flickering upward combustion — implies particle emission and warm palette"
+    render_mode: "billboard"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "billboard"
+      implied_look:
+        material: "emissive"
+        color_mode: "glyph_native"
+        fallback_palette: "sunset"
+      implied_action:
+        motion: "oscillate"
+        parameters:
+          speed: 2.5
+          amplitude: 0.15
+          axis: "y"
+        secondary_motion: "scale_pulse"
+        secondary_parameters:
+          speed: 3.0
+          amplitude: 0.08
+      implied_effects: ["bloom"]
+      effect_intensities:
+        bloom: 0.7
+      physics_model: "particle"
+      compositional_role: "trigger"
+      semantic_tags: ["hot", "destructive", "energetic", "upward"]
+      implied_scene_behavior:
+        particle_emission: true
+        emission_rate: 8
+        emission_direction: [0, 1, 0]
+        lifetime: 1.5
+        fade_out: true
+
+  water_wave:
+    glyph: "🌊"
+    name: "Ocean Wave"
+    description: "Lateral wave propagation — implies fluid dynamics and cool palette"
+    render_mode: "billboard"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "billboard"
+      implied_look:
+        material: "glass"
+        color_mode: "palette_override"
+        fallback_palette: "ocean"
+      implied_action:
+        motion: "wave_propagate"
+        parameters:
+          speed: 1.2
+          amplitude: 0.4
+          wavelength: 3.0
+          direction: "x"
+      implied_effects: ["chromatic_aberration"]
+      effect_intensities:
+        chromatic_aberration: 0.3
+      physics_model: "fluid"
+      compositional_role: "background"
+      semantic_tags: ["cool", "flowing", "lateral", "rhythmic"]
+      implied_scene_behavior:
+        wave_field: true
+        field_copies: 5
+        field_spacing: 2.0
+        phase_offset_per_copy: 0.4
+
+  lightning:
+    glyph: "⚡"
+    name: "Lightning Bolt"
+    description: "Instantaneous high-energy flash — implies snap dynamics and stark contrast"
+    render_mode: "billboard"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "billboard"
+      implied_look:
+        material: "emissive"
+        color_mode: "glyph_native"
+        fallback_palette: "electric"
+      implied_action:
+        motion: "snap_elastic"
+        parameters:
+          speed: 8.0
+          snap_sharpness: 0.9
+          rest_fraction: 0.7
+      implied_effects: ["bloom", "film_grain"]
+      effect_intensities:
+        bloom: 1.0
+        film_grain: 0.3
+      physics_model: "elastic"
+      compositional_role: "trigger"
+      semantic_tags: ["electric", "instantaneous", "high_energy", "vertical"]
+      implied_scene_behavior:
+        flash_on_appear: true
+        flash_duration: 0.15
+        screen_shake: 0.02
+
+  tornado:
+    glyph: "🌪️"
+    name: "Tornado"
+    description: "Rotational vortex — implies spiral motion and turbulent dynamics"
+    render_mode: "billboard"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "billboard"
+      implied_look:
+        material: "matte"
+        color_mode: "palette_override"
+        fallback_palette: "monochrome"
+      implied_action:
+        motion: "rotate"
+        parameters:
+          speed: 4.0
+          axis: "y"
+        secondary_motion: "scale_pulse"
+        secondary_parameters:
+          speed: 0.8
+          amplitude: 0.15
+      implied_effects: ["motion_blur"]
+      effect_intensities:
+        motion_blur: 0.6
+      physics_model: "fluid"
+      compositional_role: "anchor"
+      semantic_tags: ["rotational", "destructive", "vertical", "vortex"]
+      implied_scene_behavior:
+        attract_nearby: true
+        attraction_radius: 4.0
+        attraction_strength: 0.3
+
+  snowflake:
+    glyph: "❄️"
+    name: "Snowflake"
+    description: "Crystalline drift — implies gentle descent and hexagonal symmetry"
+    render_mode: "particle"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "particle"
+      implied_look:
+        material: "glass"
+        color_mode: "palette_override"
+        fallback_palette: "ice"
+      implied_action:
+        motion: "float_bob"
+        parameters:
+          speed: 0.3
+          amplitude: 0.5
+          drift_x: 0.1
+          drift_y: -0.2
+      implied_effects: []
+      physics_model: "particle"
+      compositional_role: "particle"
+      semantic_tags: ["cold", "gentle", "descending", "crystalline"]
+      implied_scene_behavior:
+        particle_emission: true
+        emission_rate: 12
+        emission_direction: [0.1, -1, 0]
+        lifetime: 4.0
+        fade_out: true
+        rotation_drift: 0.5
+
+
+celestial:
+  earth:
+    glyph: "🌍"
+    name: "Earth"
+    description: "Planetary body — implies slow rotation, orbital anchor, massive scale"
+    render_mode: "extruded"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "extruded"
+      implied_look:
+        material: "metallic"
+        color_mode: "glyph_native"
+        fallback_palette: "ocean"
+      implied_action:
+        motion: "rotate"
+        parameters:
+          speed: 0.15
+          axis: "y"
+      implied_effects: []
+      physics_model: "orbital"
+      compositional_role: "anchor"
+      semantic_tags: ["massive", "spherical", "orbital_center", "slow"]
+      implied_scene_behavior:
+        gravity_well: true
+        gravity_radius: 6.0
+
+  moon:
+    glyph: "🌙"
+    name: "Crescent Moon"
+    description: "Lunar body — implies tidal orbit, reflected light, nocturnal palette"
+    render_mode: "billboard"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "billboard"
+      implied_look:
+        material: "matte"
+        color_mode: "glyph_native"
+        fallback_palette: "moonlight"
+      implied_action:
+        motion: "orbit"
+        parameters:
+          speed: 0.3
+          radius: 3.0
+          axis: [0, 1, 0.1]
+      implied_effects: ["bloom"]
+      effect_intensities:
+        bloom: 0.3
+      physics_model: "orbital"
+      compositional_role: "satellite"
+      semantic_tags: ["nocturnal", "reflective", "orbital", "gentle"]
+
+  star:
+    glyph: "⭐"
+    name: "Star"
+    description: "Stellar point — implies radial glow, distant scale, twinkle pulse"
+    render_mode: "billboard"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "billboard"
+      implied_look:
+        material: "emissive"
+        color_mode: "glyph_native"
+        fallback_palette: "gold_silver"
+      implied_action:
+        motion: "scale_pulse"
+        parameters:
+          speed: 1.5
+          amplitude: 0.12
+      implied_effects: ["bloom"]
+      effect_intensities:
+        bloom: 0.5
+      physics_model: "rigid"
+      compositional_role: "background"
+      semantic_tags: ["luminous", "distant", "pulsing", "point_source"]
+
+  sun:
+    glyph: "☀️"
+    name: "Sun"
+    description: "Solar body — implies intense emission, central anchor, radial energy"
+    render_mode: "extruded"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "extruded"
+      implied_look:
+        material: "emissive"
+        color_mode: "glyph_native"
+        fallback_palette: "sunset"
+      implied_action:
+        motion: "rotate"
+        parameters:
+          speed: 0.08
+          axis: "y"
+        secondary_motion: "scale_pulse"
+        secondary_parameters:
+          speed: 0.5
+          amplitude: 0.03
+      implied_effects: ["bloom"]
+      effect_intensities:
+        bloom: 1.0
+      physics_model: "orbital"
+      compositional_role: "anchor"
+      semantic_tags: ["massive", "luminous", "hot", "radial", "orbital_center"]
+      implied_scene_behavior:
+        gravity_well: true
+        gravity_radius: 10.0
+        light_source: true
+        light_color: "#ffdd88"
+        light_intensity: 1.5
+
+  ringed_planet:
+    glyph: "🪐"
+    name: "Ringed Planet"
+    description: "Gas giant with ring system — implies tilted rotation, majestic scale"
+    render_mode: "extruded"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "extruded"
+      implied_look:
+        material: "metallic"
+        color_mode: "glyph_native"
+        fallback_palette: "earth_tone"
+      implied_action:
+        motion: "rotate"
+        parameters:
+          speed: 0.1
+          axis: "y"
+          tilt: 0.4  # radians
+      implied_effects: []
+      physics_model: "orbital"
+      compositional_role: "anchor"
+      semantic_tags: ["massive", "ringed", "tilted", "majestic"]
+
+
+objects:
+  gem:
+    glyph: "💎"
+    name: "Gem Stone"
+    description: "Faceted crystal — implies high refraction, slow rotation, precious material"
+    render_mode: "extruded"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "extruded"
+      implied_look:
+        material: "crystal"
+        color_mode: "palette_override"
+        fallback_palette: "cyberpunk"
+      implied_action:
+        motion: "rotate"
+        parameters:
+          speed: 0.3
+          axis: "y"
+      implied_effects: ["chromatic_aberration", "bloom"]
+      effect_intensities:
+        chromatic_aberration: 0.4
+        bloom: 0.3
+      physics_model: "rigid"
+      compositional_role: "anchor"
+      semantic_tags: ["precious", "faceted", "refractive", "slow"]
+
+  crystal_ball:
+    glyph: "🔮"
+    name: "Crystal Ball"
+    description: "Translucent sphere — implies refraction, internal glow, mystical"
+    render_mode: "extruded"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "extruded"
+      implied_look:
+        material: "glass"
+        color_mode: "glyph_native"
+        fallback_palette: "neon"
+      implied_action:
+        motion: "float_bob"
+        parameters:
+          speed: 0.5
+          amplitude: 0.2
+        secondary_motion: "rotate"
+        secondary_parameters:
+          speed: 0.1
+      implied_effects: ["bloom"]
+      effect_intensities:
+        bloom: 0.4
+      physics_model: "rigid"
+      compositional_role: "anchor"
+      semantic_tags: ["mystical", "translucent", "spherical", "glowing"]
+
+  dice:
+    glyph: "🎲"
+    name: "Dice"
+    description: "Cubic randomizer — implies tumble physics, hard edges, playful"
+    render_mode: "extruded"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "extruded"
+      implied_look:
+        material: "matte"
+        color_mode: "glyph_native"
+        fallback_palette: "monochrome"
+      implied_action:
+        motion: "bounce"
+        parameters:
+          speed: 2.0
+          amplitude: 0.8
+          damping: 0.7
+        secondary_motion: "tumble"
+        secondary_parameters:
+          speed: 3.0
+          axes: ["x", "z"]
+      implied_effects: []
+      physics_model: "elastic"
+      compositional_role: "satellite"
+      semantic_tags: ["cubic", "random", "playful", "bouncing"]
+
+  rocket:
+    glyph: "🚀"
+    name: "Rocket"
+    description: "Trajectory vehicle — implies directional thrust, acceleration, trail emission"
+    render_mode: "billboard"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "billboard"
+      implied_look:
+        material: "metallic"
+        color_mode: "glyph_native"
+        fallback_palette: "sunset"
+      implied_action:
+        motion: "orbit"
+        parameters:
+          speed: 1.2
+          radius: 3.0
+        secondary_motion: "accelerate"
+        secondary_parameters:
+          ease: "ease_in_out"
+      implied_effects: ["bloom", "motion_blur"]
+      effect_intensities:
+        bloom: 0.4
+        motion_blur: 0.3
+      physics_model: "orbital"
+      compositional_role: "satellite"
+      semantic_tags: ["directional", "fast", "ascending", "trail"]
+      implied_scene_behavior:
+        particle_trail: true
+        trail_glyph: "🔥"
+        trail_count: 6
+        trail_fade: true
+
+  bomb:
+    glyph: "💣"
+    name: "Bomb"
+    description: "Explosive device — implies countdown tension, sudden burst, debris scatter"
+    render_mode: "extruded"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "extruded"
+      implied_look:
+        material: "matte"
+        color_mode: "glyph_native"
+        fallback_palette: "monochrome"
+      implied_action:
+        motion: "scale_pulse"
+        parameters:
+          speed: 2.0
+          amplitude: 0.05
+      implied_effects: ["film_grain"]
+      effect_intensities:
+        film_grain: 0.2
+      physics_model: "elastic"
+      compositional_role: "trigger"
+      semantic_tags: ["explosive", "tense", "countdown", "burst"]
+      implied_scene_behavior:
+        burst_event: true
+        burst_delay: 3.0
+        burst_glyphs: ["💥", "🔥", "💨"]
+        burst_count: 12
+
+
+living:
+  butterfly:
+    glyph: "🦋"
+    name: "Butterfly"
+    description: "Delicate flier — implies erratic flutter, bilateral symmetry, organic drift"
+    render_mode: "billboard"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "billboard"
+      implied_look:
+        material: "matte"
+        color_mode: "glyph_native"
+        fallback_palette: "pastel"
+      implied_action:
+        motion: "lissajous"
+        parameters:
+          frequency_a: 3
+          frequency_b: 2
+          amplitude: 1.5
+          speed: 0.8
+      implied_effects: []
+      physics_model: "particle"
+      compositional_role: "satellite"
+      semantic_tags: ["organic", "erratic", "delicate", "bilateral"]
+
+  octopus:
+    glyph: "🐙"
+    name: "Octopus"
+    description: "Cephalopod — implies undulating motion, fluid dynamics, tentacular reach"
+    render_mode: "extruded"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "extruded"
+      implied_look:
+        material: "rubber"
+        color_mode: "glyph_native"
+        fallback_palette: "ocean"
+      implied_action:
+        motion: "wave_propagate"
+        parameters:
+          speed: 0.8
+          amplitude: 0.3
+          wavelength: 2.0
+        secondary_motion: "float_bob"
+        secondary_parameters:
+          speed: 0.4
+          amplitude: 0.3
+      implied_effects: []
+      physics_model: "fluid"
+      compositional_role: "anchor"
+      semantic_tags: ["organic", "undulating", "fluid", "tentacular"]
+
+  flower:
+    glyph: "🌸"
+    name: "Cherry Blossom"
+    description: "Floral bloom — implies growth emergence, gentle rotation, organic unfold"
+    render_mode: "billboard"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "billboard"
+      implied_look:
+        material: "matte"
+        color_mode: "glyph_native"
+        fallback_palette: "pastel"
+      implied_action:
+        motion: "scale_pulse"
+        parameters:
+          speed: 0.5
+          amplitude: 0.1
+        secondary_motion: "rotate"
+        secondary_parameters:
+          speed: 0.2
+      implied_effects: []
+      physics_model: "growth"
+      compositional_role: "particle"
+      semantic_tags: ["organic", "gentle", "blooming", "symmetrical"]
+      implied_scene_behavior:
+        particle_emission: true
+        emission_rate: 4
+        emission_direction: [0.3, -0.5, 0.2]
+        lifetime: 3.0
+        fade_out: true
+        rotation_drift: 1.0
+
+  tree:
+    glyph: "🌲"
+    name: "Evergreen Tree"
+    description: "Rooted vertical — implies stillness, vertical axis, grounded anchor"
+    render_mode: "extruded"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "extruded"
+      implied_look:
+        material: "matte"
+        color_mode: "glyph_native"
+        fallback_palette: "forest"
+      implied_action:
+        motion: "oscillate"
+        parameters:
+          speed: 0.3
+          amplitude: 0.02
+          axis: "x"
+      implied_effects: []
+      physics_model: "rigid"
+      compositional_role: "anchor"
+      semantic_tags: ["rooted", "vertical", "still", "organic", "grounded"]
+
+
+abstract_symbolic:
+  sparkles:
+    glyph: "✨"
+    name: "Sparkles"
+    description: "Radiant particles — implies scattered twinkle, ambient magic, decoration"
+    render_mode: "particle"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "particle"
+      implied_look:
+        material: "emissive"
+        color_mode: "glyph_native"
+        fallback_palette: "gold_silver"
+      implied_action:
+        motion: "float_bob"
+        parameters:
+          speed: 0.8
+          amplitude: 0.3
+          drift_x: 0.1
+          drift_y: 0.05
+      implied_effects: ["bloom"]
+      effect_intensities:
+        bloom: 0.5
+      physics_model: "particle"
+      compositional_role: "particle"
+      semantic_tags: ["luminous", "scattered", "ambient", "magical"]
+      implied_scene_behavior:
+        particle_emission: true
+        emission_rate: 15
+        emission_direction: [0, 0.3, 0]
+        lifetime: 2.0
+        fade_out: true
+        scale_in: true
+
+  dizzy:
+    glyph: "💫"
+    name: "Dizzy Star"
+    description: "Spiral orbit — implies circular motion around a point, disorientation"
+    render_mode: "billboard"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "billboard"
+      implied_look:
+        material: "emissive"
+        color_mode: "glyph_native"
+        fallback_palette: "gold_silver"
+      implied_action:
+        motion: "orbit"
+        parameters:
+          speed: 2.0
+          radius: 1.0
+      implied_effects: ["bloom", "motion_blur"]
+      effect_intensities:
+        bloom: 0.4
+        motion_blur: 0.3
+      physics_model: "orbital"
+      compositional_role: "satellite"
+      semantic_tags: ["circular", "fast", "orbital", "disorienting"]
+
+  diamond_shape:
+    glyph: "🔷"
+    name: "Blue Diamond"
+    description: "Geometric marker — implies clean rotation, UI element, structured"
+    render_mode: "extruded"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "extruded"
+      implied_look:
+        material: "metallic"
+        color_mode: "glyph_native"
+        fallback_palette: "cyberpunk"
+      implied_action:
+        motion: "rotate"
+        parameters:
+          speed: 0.5
+          axis: "y"
+      implied_effects: []
+      physics_model: "rigid"
+      compositional_role: "anchor"
+      semantic_tags: ["geometric", "clean", "structured", "UI"]
+
+  infinity:
+    glyph: "♾️"
+    name: "Infinity"
+    description: "Eternal loop — implies lissajous path, continuous motion, mathematical"
+    render_mode: "extruded"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "extruded"
+      implied_look:
+        material: "metallic"
+        color_mode: "palette_override"
+        fallback_palette: "monochrome"
+      implied_action:
+        motion: "lissajous"
+        parameters:
+          frequency_a: 2
+          frequency_b: 1
+          amplitude: 1.0
+          speed: 0.5
+      implied_effects: ["bloom"]
+      effect_intensities:
+        bloom: 0.2
+      physics_model: "rigid"
+      compositional_role: "anchor"
+      semantic_tags: ["mathematical", "continuous", "looping", "eternal"]
+
+  explosion:
+    glyph: "💥"
+    name: "Collision / Explosion"
+    description: "Impact burst — implies radial expansion, flash, debris scatter"
+    render_mode: "billboard"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "billboard"
+      implied_look:
+        material: "emissive"
+        color_mode: "glyph_native"
+        fallback_palette: "sunset"
+      implied_action:
+        motion: "scale_pulse"
+        parameters:
+          speed: 6.0
+          amplitude: 0.8
+        secondary_motion: "fade"
+        secondary_parameters:
+          duration: 0.5
+      implied_effects: ["bloom", "chromatic_aberration"]
+      effect_intensities:
+        bloom: 1.0
+        chromatic_aberration: 0.5
+      physics_model: "particle"
+      compositional_role: "trigger"
+      semantic_tags: ["explosive", "radial", "instantaneous", "destructive"]
+      implied_scene_behavior:
+        screen_shake: 0.05
+        flash_on_appear: true
+        flash_duration: 0.1
+
+
+music_sound:
+  musical_note:
+    glyph: "🎵"
+    name: "Musical Notes"
+    description: "Floating melody — implies upward drift, rhythmic bob, musical timing"
+    render_mode: "billboard"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "billboard"
+      implied_look:
+        material: "emissive"
+        color_mode: "glyph_native"
+        fallback_palette: "pastel"
+      implied_action:
+        motion: "float_bob"
+        parameters:
+          speed: 1.0
+          amplitude: 0.4
+          drift_y: 0.3
+        secondary_motion: "oscillate"
+        secondary_parameters:
+          speed: 2.0
+          amplitude: 0.15
+          axis: "x"
+      implied_effects: []
+      physics_model: "particle"
+      compositional_role: "particle"
+      semantic_tags: ["musical", "floating", "rhythmic", "ascending"]
+      implied_scene_behavior:
+        particle_emission: true
+        emission_rate: 3
+        emission_direction: [0.2, 1, 0]
+        lifetime: 3.0
+        fade_out: true
+        scale_in: true
+
+  bell:
+    glyph: "🔔"
+    name: "Bell"
+    description: "Resonant chime — implies pendulum swing, decay oscillation, metallic ring"
+    render_mode: "extruded"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "extruded"
+      implied_look:
+        material: "metallic"
+        color_mode: "glyph_native"
+        fallback_palette: "gold_silver"
+      implied_action:
+        motion: "oscillate"
+        parameters:
+          speed: 3.0
+          amplitude: 0.2
+          damping: 0.95
+          axis: "z"
+      implied_effects: ["bloom"]
+      effect_intensities:
+        bloom: 0.2
+      physics_model: "elastic"
+      compositional_role: "trigger"
+      semantic_tags: ["resonant", "metallic", "pendular", "decaying"]
+
+
+expressions:
+  skull:
+    glyph: "💀"
+    name: "Skull"
+    description: "Memento mori — implies slow reveal, dramatic lighting, stark contrast"
+    render_mode: "extruded"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "extruded"
+      implied_look:
+        material: "bone"
+        color_mode: "palette_override"
+        fallback_palette: "monochrome"
+      implied_action:
+        motion: "rotate"
+        parameters:
+          speed: 0.15
+          axis: "y"
+      implied_effects: ["film_grain", "vignette"]
+      effect_intensities:
+        film_grain: 0.4
+        vignette: 0.6
+      physics_model: "rigid"
+      compositional_role: "anchor"
+      semantic_tags: ["dark", "dramatic", "still", "stark"]
+
+  eye:
+    glyph: "👁️"
+    name: "Eye"
+    description: "Observing gaze — implies tracking motion, pupil dilation, surveillance"
+    render_mode: "extruded"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "extruded"
+      implied_look:
+        material: "glass"
+        color_mode: "glyph_native"
+        fallback_palette: "monochrome"
+      implied_action:
+        motion: "face_toward"
+        parameters:
+          target: "camera"
+          smooth: 0.1
+        secondary_motion: "scale_pulse"
+        secondary_parameters:
+          speed: 0.3
+          amplitude: 0.02
+      implied_effects: ["bloom"]
+      effect_intensities:
+        bloom: 0.2
+      physics_model: "rigid"
+      compositional_role: "anchor"
+      semantic_tags: ["observing", "tracking", "bilateral", "confrontational"]
+
+  melting_face:
+    glyph: "🫠"
+    name: "Melting Face"
+    description: "Dissolution — implies downward deformation, viscous flow, surreal"
+    render_mode: "billboard"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "billboard"
+      implied_look:
+        material: "rubber"
+        color_mode: "glyph_native"
+        fallback_palette: "sunset"
+      implied_action:
+        motion: "morph_deform"
+        parameters:
+          speed: 0.5
+          amplitude: 0.3
+          direction: "down"
+      implied_effects: ["chromatic_aberration"]
+      effect_intensities:
+        chromatic_aberration: 0.3
+      physics_model: "fluid"
+      compositional_role: "anchor"
+      semantic_tags: ["surreal", "dissolving", "downward", "viscous"]
+
+
+weather:
+  rainbow:
+    glyph: "🌈"
+    name: "Rainbow"
+    description: "Spectral arc — implies color gradient sweep, wide span, optimistic"
+    render_mode: "billboard"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "billboard"
+      implied_look:
+        material: "emissive"
+        color_mode: "glyph_native"
+        fallback_palette: "rainbow"
+      implied_action:
+        motion: "scale_pulse"
+        parameters:
+          speed: 0.3
+          amplitude: 0.05
+      implied_effects: ["bloom", "chromatic_aberration"]
+      effect_intensities:
+        bloom: 0.3
+        chromatic_aberration: 0.2
+      physics_model: "rigid"
+      compositional_role: "background"
+      semantic_tags: ["spectral", "wide", "optimistic", "gradated"]
+
+  cloud:
+    glyph: "☁️"
+    name: "Cloud"
+    description: "Atmospheric mass — implies slow lateral drift, soft edges, volumetric"
+    render_mode: "billboard"
+    semantic_profile:
+      implied_object:
+        primitive: "emoji_glyph"
+        render_mode: "billboard"
+      implied_look:
+        material: "matte"
+        color_mode: "palette_override"
+        fallback_palette: "monochrome"
+      implied_action:
+        motion: "float_bob"
+        parameters:
+          speed: 0.15
+          amplitude: 0.1
+          drift_x: 0.2
+      implied_effects: []
+      physics_model: "fluid"
+      compositional_role: "background"
+      semantic_tags: ["atmospheric", "soft", "lateral", "slow", "volumetric"]
+
+
+# =============================================================================
+# GLYPH LOOKUP INDEX
+# =============================================================================
+# Flat glyph→category.name mapping for O(1) lookup by Unicode character.
+# Built at load time by the MCP server from the categories above.
+# This section is regenerated — do not edit manually.
+#
+# The server builds this dynamically from the category data, but we include
+# a static version for documentation and validation purposes.
+
+glyph_index:
+  "🔥": "natural_phenomena.fire"
+  "🌊": "natural_phenomena.water_wave"
+  "⚡": "natural_phenomena.lightning"
+  "🌪️": "natural_phenomena.tornado"
+  "❄️": "natural_phenomena.snowflake"
+  "🌍": "celestial.earth"
+  "🌙": "celestial.moon"
+  "⭐": "celestial.star"
+  "☀️": "celestial.sun"
+  "🪐": "celestial.ringed_planet"
+  "💎": "objects.gem"
+  "🔮": "objects.crystal_ball"
+  "🎲": "objects.dice"
+  "🚀": "objects.rocket"
+  "💣": "objects.bomb"
+  "🦋": "living.butterfly"
+  "🐙": "living.octopus"
+  "🌸": "living.flower"
+  "🌲": "living.tree"
+  "✨": "abstract_symbolic.sparkles"
+  "💫": "abstract_symbolic.dizzy"
+  "🔷": "abstract_symbolic.diamond_shape"
+  "♾️": "abstract_symbolic.infinity"
+  "💥": "abstract_symbolic.explosion"
+  "🎵": "music_sound.musical_note"
+  "🔔": "music_sound.bell"
+  "💀": "expressions.skull"
+  "👁️": "expressions.eye"
+  "🫠": "expressions.melting_face"
+  "🌈": "weather.rainbow"
+  "☁️": "weather.cloud"
+
+
+# =============================================================================
+# COMPOSITIONAL ROLE COMPATIBILITY MATRIX
+# =============================================================================
+# Defines which role combinations create coherent scenes.
+# Used by compose_emoji_scene() for automatic layout.
+
+role_compatibility:
+  anchor:
+    max_per_scene: 2
+    default_position: [0, 0, 0]
+    default_scale: 1.5
+    description: "Scene center of gravity"
+
+  satellite:
+    max_per_scene: 6
+    default_relationship: "orbit_around"
+    default_target: "nearest_anchor"
+    orbit_radius_range: [2.0, 5.0]
+    description: "Orbits or references an anchor"
+
+  particle:
+    max_per_scene: 100
+    default_relationship: "cascade_delay"
+    arrangement: "radial"
+    instance_count_range: [8, 50]
+    description: "Swarm member with staggered timing"
+
+  background:
+    max_per_scene: 4
+    default_position_z: -5.0
+    default_scale: 2.0
+    default_opacity: 0.5
+    description: "Ambient fill, slow drift"
+
+  trigger:
+    max_per_scene: 3
+    default_visibility: "hidden"
+    activation: "timed"
+    description: "Event-driven appearance"
+
+
+# =============================================================================
+# SEMANTIC TAG AFFINITIES
+# =============================================================================
+# Maps semantic tags to preferred LOOK and EFFECT defaults.
+# Used when composing glyphs that don't have explicit overrides.
+
+tag_affinities:
+  hot:
+    preferred_palette: "sunset"
+    preferred_lighting: "warm_ambient"
+    effect_boost:
+      bloom: 0.2
+  cold:
+    preferred_palette: "ice"
+    preferred_lighting: "cool_ambient"
+    effect_boost: {}
+  luminous:
+    preferred_palette: "gold_silver"
+    preferred_lighting: "studio_clean"
+    effect_boost:
+      bloom: 0.3
+  dark:
+    preferred_palette: "monochrome"
+    preferred_lighting: "dramatic_side"
+    effect_boost:
+      film_grain: 0.2
+      vignette: 0.3
+  organic:
+    preferred_palette: "forest"
+    preferred_lighting: "soft_ambient"
+    effect_boost: {}
+  fast:
+    preferred_palette: "electric"
+    preferred_lighting: "dramatic_side"
+    effect_boost:
+      motion_blur: 0.3
+  massive:
+    preferred_palette: "earth_tone"
+    preferred_lighting: "rim_light"
+    effect_boost: {}
+  musical:
+    preferred_palette: "pastel"
+    preferred_lighting: "soft_ambient"
+    effect_boost:
+      bloom: 0.15

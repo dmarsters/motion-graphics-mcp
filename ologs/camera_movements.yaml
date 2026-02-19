@@ -1,0 +1,275 @@
+# Camera Movements Taxonomy — Motion Graphics MCP
+# =================================================
+#
+# Independent axis from object motion (ACTION).
+# ACTION describes what the SUBJECT does.
+# CAMERA describes what the VIEWER does.
+#
+# These compose independently: a pulsing object with dolly_in
+# tells a different story than the same object with crane_up.
+#
+# Each movement carries narrative_mood for orbit composer integration.
+# orbit_affinity maps to mood arc phases:
+#   opening → establishing shots (orbit, crane_up, dolly_out)
+#   tension → approach shots (dolly_in, push_in)
+#   climax  → dynamic shots (flythrough, whip_pan, barrel_roll)
+#   reversal → disorienting (whip_pan, vertigo)
+#   resolution → settling (static, orbit, dolly_out)
+
+# ========== STATIC / MINIMAL ==========
+
+static:
+  name: "Static (Locked Off)"
+  description: "No camera movement — all dynamism lives in the subject"
+  narrative_mood: [observation, documentary, tension_hold]
+  animation_type: none
+  parameters: {}
+  visual_character: "Still, observational — forces attention onto object motion"
+  orbit_affinity:
+    peaks_at: resolution
+    driven_by: aesthetic_intensity
+    response: "Hold position when composition is resolved"
+
+orbit:
+  name: "Orbit"
+  description: "Continuous horizontal circle around subject"
+  narrative_mood: [contemplative, neutral, establishing]
+  animation_type: orbit
+  parameters:
+    speed: 0.15
+    height_oscillation: 0.3
+    height_base: 0.35        # fraction of camDist
+    radius_multiplier: 1.0   # relative to camDist
+  visual_character: "Steady, meditative — default cinematic viewing"
+  orbit_affinity:
+    peaks_at: opening
+    driven_by: control_complexity
+    response: "Gentle orbiting as neutral baseline"
+
+slow_orbit:
+  name: "Slow Orbit"
+  description: "Very slow orbit for extended contemplation"
+  narrative_mood: [meditative, dreamy, ambient]
+  animation_type: orbit
+  parameters:
+    speed: 0.05
+    height_oscillation: 0.15
+    height_base: 0.3
+    radius_multiplier: 1.0
+  visual_character: "Nearly imperceptible drift — ambient viewing"
+  orbit_affinity:
+    peaks_at: resolution
+    driven_by: surface_tension
+    response: "Slow down as tension resolves"
+
+# ========== APPROACH / RETREAT ==========
+
+dolly_in:
+  name: "Dolly In"
+  description: "Smooth approach toward subject — creates intimacy or tension"
+  narrative_mood: [tension, intimacy, focus, approaching]
+  animation_type: distance_lerp
+  parameters:
+    start_distance_multiplier: 2.5
+    end_distance_multiplier: 0.4
+    easing: ease_in_out
+    orbit_during: true         # gentle orbit while approaching
+    orbit_speed: 0.08
+    height_drift: -0.1         # slight descent during approach
+  visual_character: "Closing in — increasing detail, narrowing context"
+  orbit_affinity:
+    peaks_at: tension
+    driven_by: geometric_sharpness
+    response: "Approach accelerates as geometry sharpens"
+
+dolly_out:
+  name: "Dolly Out (Reveal)"
+  description: "Pull back from subject to reveal spatial context"
+  narrative_mood: [resolution, establishing, isolation, reveal]
+  animation_type: distance_lerp
+  parameters:
+    start_distance_multiplier: 0.5
+    end_distance_multiplier: 3.0
+    easing: ease_out
+    orbit_during: true
+    orbit_speed: 0.1
+    height_drift: 0.15
+  visual_character: "Retreating — shrinking subject, expanding world"
+  orbit_affinity:
+    peaks_at: resolution
+    driven_by: optical_intensity
+    response: "Pull back as intensity fades"
+
+push_in:
+  name: "Push In (Dramatic)"
+  description: "Faster, more aggressive approach than dolly_in"
+  narrative_mood: [confrontation, urgency, dramatic_reveal]
+  animation_type: distance_lerp
+  parameters:
+    start_distance_multiplier: 3.0
+    end_distance_multiplier: 0.25
+    easing: ease_in
+    orbit_during: false
+    height_drift: 0.0
+  visual_character: "Aggressive advance — builds pressure"
+  orbit_affinity:
+    peaks_at: climax
+    driven_by: aesthetic_intensity
+    response: "Commit to direct approach at peak intensity"
+
+# ========== VERTICAL ==========
+
+crane_up:
+  name: "Crane Up"
+  description: "Vertical ascent — revelation, grandeur, transcendence"
+  narrative_mood: [opening, revelation, grandeur, transcendence]
+  animation_type: vertical_arc
+  parameters:
+    start_height_offset: -1.0    # below normal viewing height
+    end_height_offset: 2.5       # well above
+    tilt_follow: true             # camera tilts to keep subject framed
+    orbit_during: true
+    orbit_speed: 0.06
+    easing: ease_out
+  visual_character: "Rising viewpoint — expanding horizon, growing perspective"
+  orbit_affinity:
+    peaks_at: opening
+    driven_by: control_complexity
+    response: "Rise to reveal complexity from above"
+
+crane_down:
+  name: "Crane Down"
+  description: "Vertical descent — grounding, intimacy, focus"
+  narrative_mood: [grounding, focus, descent]
+  animation_type: vertical_arc
+  parameters:
+    start_height_offset: 2.5
+    end_height_offset: -0.5
+    tilt_follow: true
+    orbit_during: true
+    orbit_speed: 0.06
+    easing: ease_in_out
+  visual_character: "Descending viewpoint — narrowing to subject level"
+  orbit_affinity:
+    peaks_at: tension
+    driven_by: surface_tension
+    response: "Descend as surface tension draws viewer in"
+
+# ========== DYNAMIC / IMMERSIVE ==========
+
+flythrough:
+  name: "Fly Through"
+  description: "Camera passes through or past the subject — immersive, energetic"
+  narrative_mood: [immersion, energy, breakthrough, transition]
+  animation_type: bezier_path
+  parameters:
+    start_distance_multiplier: 3.0
+    closest_approach: 0.15        # passes very close to origin
+    end_distance_multiplier: 3.0
+    path_curvature: 0.6           # 0=straight, 1=extreme curve
+    height_variation: 0.8
+    speed_profile: ease_in_out    # slow at ends, fast through middle
+  visual_character: "Plunging through — speed, proximity, emergence"
+  orbit_affinity:
+    peaks_at: climax
+    driven_by: geometric_sharpness
+    response: "Fly through at maximum structural tension"
+
+whip_pan:
+  name: "Whip Pan"
+  description: "Fast rotational snap between viewing angles"
+  narrative_mood: [surprise, disorientation, transition, energy]
+  animation_type: rotation_snap
+  parameters:
+    snap_angle: 90               # degrees per snap
+    snap_duration: 0.3           # seconds for the whip motion
+    hold_duration: 2.0           # seconds holding each angle
+    snap_easing: ease_out        # sharp start, settle at end
+    height_base: 0.35
+  visual_character: "Staccato reframing — jarring, rhythmic, editorial"
+  orbit_affinity:
+    peaks_at: reversal
+    driven_by: aesthetic_intensity
+    response: "Snap at phase reversals"
+
+barrel_roll:
+  name: "Barrel Roll"
+  description: "Camera rolls around its forward axis — disorienting, dramatic"
+  narrative_mood: [disorientation, drama, vertigo, transformation]
+  animation_type: roll
+  parameters:
+    roll_speed: 0.3              # rotations per loop
+    orbit_during: true
+    orbit_speed: 0.08
+    roll_amplitude: 1.0          # 1.0 = full 360°, 0.5 = half roll
+  visual_character: "World tilting — destabilizing, transformative"
+  orbit_affinity:
+    peaks_at: reversal
+    driven_by: geometric_sharpness
+    response: "Roll when structure inverts"
+
+# ========== COMBINED / CINEMATIC ==========
+
+vertigo:
+  name: "Vertigo (Dolly Zoom)"
+  description: "Simultaneous dolly-in + zoom-out — subject stays same size but perspective warps"
+  narrative_mood: [unease, realization, psychological_tension]
+  animation_type: vertigo
+  parameters:
+    start_distance_multiplier: 1.5
+    end_distance_multiplier: 0.5
+    start_fov: 30                # degrees
+    end_fov: 80                  # degrees — wider as camera approaches
+    easing: ease_in_out
+    orbit_during: false
+  visual_character: "Hitchcock effect — world stretches around static subject"
+  orbit_affinity:
+    peaks_at: reversal
+    driven_by: surface_tension
+    response: "Distort perspective at tension reversal"
+
+arc_rise:
+  name: "Arc Rise"
+  description: "Diagonal arc — combines forward approach with vertical rise"
+  narrative_mood: [heroic, ascending, cinematic_reveal]
+  animation_type: arc_path
+  parameters:
+    start_position: [-2.0, -0.5, 2.0]   # offsets from camDist defaults
+    end_position: [0.5, 1.5, 0.8]
+    easing: ease_out
+    look_at_offset: [0, 0.3, 0]          # look slightly above center
+  visual_character: "Sweeping arc — movement has direction and purpose"
+  orbit_affinity:
+    peaks_at: opening
+    driven_by: optical_intensity
+    response: "Sweep into position as scene illuminates"
+
+breathing:
+  name: "Breathing"
+  description: "Subtle rhythmic distance oscillation — like camera is breathing"
+  narrative_mood: [organic, alive, meditative, ambient]
+  animation_type: distance_oscillate
+  parameters:
+    oscillation_amplitude: 0.15  # fraction of camDist
+    oscillation_speed: 0.4       # Hz
+    height_oscillation: 0.08
+    orbit_during: true
+    orbit_speed: 0.04
+  visual_character: "Living viewpoint — subtle pulse gives organic quality"
+  orbit_affinity:
+    peaks_at: resolution
+    driven_by: surface_tension
+    response: "Breathe in sync with surface dynamics"
+
+# ========== METADATA ==========
+
+intentionality: >
+  Camera movements are the narrative dimension of motion graphics.
+  While OBJECT motion describes physical behavior and MATERIAL describes
+  surface identity, camera movement encodes the viewer's emotional
+  relationship to the scene. A dolly-in on a static object creates
+  more tension than a whip-pan on a pulsing one. The vocabulary is
+  borrowed from cinematography because those conventions carry decades
+  of audience conditioning — crane-up means revelation, static means
+  observation, flythrough means immersion. These are not arbitrary
+  mappings but culturally loaded narrative signals.
