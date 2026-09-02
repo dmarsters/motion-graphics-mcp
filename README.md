@@ -288,7 +288,7 @@ git push
 2. **Infinite iteration**: Change parameters, not keyframes
 3. **Deterministic**: Same parameters = same result
 4. **Compositional**: Systematic domain mixing via functors
-5. **Efficient**: 60-85% token savings vs pure LLM
+5. **Efficient**: 60-85% token savings vs pure LLM 
 
 **Your ability to describe a visual is more important than your ability to manipulate a timeline.**
 
